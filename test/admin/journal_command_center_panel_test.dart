@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'
+    hide GlobalCupertinoLocalizations, GlobalMaterialLocalizations;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jsm_fe/core/localization/app_localizations.dart';
 import 'package:jsm_fe/features/admin/presentation/widgets/journal_command_center_panel.dart';

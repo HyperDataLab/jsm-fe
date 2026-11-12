@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -28,6 +29,15 @@ http.Response _json(Object body, [int status = 200]) => http.Response(
 );
 
 void main() {
+  setUp(() {
+    dotenv.loadFromString(
+      envString:
+          'SSO_ISSUER_URL=http://localhost:3001\n'
+          'SSO_CLIENT_ID=researchpulse-ecosystem\n'
+          'SSO_REDIRECT_URI=http://localhost:5173/auth/callback',
+    );
+  });
+
   group('exchangeCode', () {
     test('success: posts correct JSON, maps full token response', () async {
       late http.Request captured;

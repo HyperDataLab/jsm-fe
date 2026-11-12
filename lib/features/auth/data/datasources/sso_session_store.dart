@@ -19,4 +19,7 @@ class SsoSessionKeys {
 
   /// JSON userinfo from /api/v1/oidc/userinfo.
   static const user = 'sso_user';
+
+  /// JSON with the local API token, seven-day expiry, and effective role.
+  static const localSession = 'local_session';
 }

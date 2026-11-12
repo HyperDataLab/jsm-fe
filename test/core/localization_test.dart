@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jsm_fe/core/localization/app_localizations.dart';
 import 'package:jsm_fe/core/localization/locale_cubit.dart';

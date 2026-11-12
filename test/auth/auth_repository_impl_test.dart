@@ -107,37 +107,41 @@ void main() {
     expect(await repo.restoreSession(), isNull);
   });
 
-  test('restoreSession restores stored tokens + userinfo', () async {
-    final store = _MemoryStore();
-    final repo = AuthRepositoryImpl(
-      launcher: SsoAuthLauncher(
-        store: store,
-        apiClient: OidcApiClient(client: _neverCalledClient()),
-      ),
-      httpClient: _backendUserClient('USER'),
-    );
-    store.write(
-      SsoSessionKeys.tokens,
-      jsonEncode(SsoTokens(accessToken: 'at').toJson()),
-    );
-    store.write(
-      SsoSessionKeys.user,
-      jsonEncode(
-        const SsoUserInfo(
-          sub: 'u1',
-          email: 'user@example.com',
-          name: 'Example User',
-        ).toJson(),
-      ),
-    );
+  test(
+    'restoreSession uses the backend user profile for the stored SSO session',
+    () async {
+      final store = _MemoryStore();
+      final repo = AuthRepositoryImpl(
+        launcher: SsoAuthLauncher(
+          store: store,
+          apiClient: OidcApiClient(client: _neverCalledClient()),
+        ),
+        httpClient: _backendUserClient('USER'),
+      );
+      store.write(
+        SsoSessionKeys.tokens,
+        jsonEncode(SsoTokens(accessToken: 'at').toJson()),
+      );
+      store.write(
+        SsoSessionKeys.user,
+        jsonEncode(
+          const SsoUserInfo(
+            sub: 'u1',
+            email: 'user@example.com',
+            name: 'Example User',
+          ).toJson(),
+        ),
+      );
 
-    final session = await repo.restoreSession();
-    expect(session, isNotNull);
-    expect(session!.user.sub, 'u1');
-    expect(session.user.email, 'user@example.com');
-    expect(session.user.name, 'Example User');
-    expect(session.accessToken, 'at');
-  });
+      final session = await repo.restoreSession();
+      expect(session, isNotNull);
+      expect(session!.user.sub, 'postgres-user-id');
+      expect(session.user.email, 'admin@example.com');
+      expect(session.user.name, 'Admin User');
+      expect(session.user.role, 'USER');
+      expect(session.accessToken, 'at');
+    },
+  );
 
   test('restoreSession uses the role returned by the JSM backend', () async {
     final store = _MemoryStore();

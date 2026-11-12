@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jsm_fe/core/widgets/app_notification.dart';
 import 'package:jsm_fe/features/auth/domain/entities/auth_provider.dart';
 import 'package:jsm_fe/features/auth/domain/entities/auth_result.dart';
 import 'package:jsm_fe/features/auth/domain/entities/auth_user.dart';
@@ -59,6 +60,8 @@ Widget _wrap(AuthRepository repo) => BlocProvider(
 );
 
 void main() {
+  tearDown(AppNotification.clear);
+
   testWidgets(
     'unauthenticated start renders Sign in button without Google button',
     (tester) async {
@@ -72,7 +75,7 @@ void main() {
     },
   );
 
-  testWidgets('tapping Sign in issues the web SSO redirect', (tester) async {
+  testWidgets('tapping Sign in reports an incomplete SSO flow', (tester) async {
     final repo = _StubRepo();
     await tester.pumpWidget(_wrap(repo));
     await tester.pumpAndSettle(); // checkSession -> unauthenticated
@@ -83,11 +86,12 @@ void main() {
     // (pumpAndSettle would never settle: the spinner animates forever).
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 100));
-    // Browser navigates away in production; here just verify the redirect
-    // was issued with the web provider.
+    // The web flow completed without a persisted session, so the user can
+    // retry instead of the page remaining in a permanent loading state.
     expect(repo.startedProvider, AuthProvider.web);
     final ctx = tester.element(find.byType(LoginView));
-    expect(ctx.read<AuthCubit>().state, isA<AuthLoading>());
+    expect(ctx.read<AuthCubit>().state, isA<AuthFailure>());
+    expect(find.textContaining('cancelled'), findsOneWidget);
   });
 
   testWidgets('auth failure surfaces an error notification, stays on login', (
@@ -99,6 +103,7 @@ void main() {
     await tester.tap(find.byType(ElevatedButton));
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump();
     expect(find.textContaining('access_denied'), findsOneWidget);
     final ctx = tester.element(find.byType(LoginView));
     expect(ctx.read<AuthCubit>().state, isA<AuthFailure>());
