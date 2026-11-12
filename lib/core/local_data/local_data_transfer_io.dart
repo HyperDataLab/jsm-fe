@@ -26,12 +26,12 @@ Future<String> exportLocalData(Future<String?> Function() tokenProvider) async {
     }
 
     final profile =
-        Platform.environment['USERPROFILE'] ??
         Platform.environment['LOCALAPPDATA'] ??
+        Platform.environment['USERPROFILE'] ??
         Directory.current.path;
     final exportDirectory = Directory(
-      '$profile${Platform.pathSeparator}Documents${Platform.pathSeparator}'
-      'HyperDataLab${Platform.pathSeparator}JSM Exports',
+      '$profile${Platform.pathSeparator}HyperDataLab${Platform.pathSeparator}'
+      'JSM${Platform.pathSeparator}exports',
     );
     await exportDirectory.create(recursive: true);
     final file = File(

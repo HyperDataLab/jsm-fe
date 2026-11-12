@@ -139,7 +139,7 @@ class _LocalDataBackupCardState extends State<LocalDataBackupCard> {
               enabled: !_working,
               decoration: InputDecoration(
                 labelText: vi ? 'Đường dẫn tệp sao lưu' : 'Backup file path',
-                hintText: r'C:\Users\you\Documents\HyperDataLab\JSM Exports\backup.zip',
+                hintText: r'C:\Users\you\AppData\Local\HyperDataLab\JSM\exports\backup.zip',
                 border: const OutlineInputBorder(),
               ),
             ),
