@@ -37,7 +37,9 @@ void main() {
     historyCleaned = false;
     BrowserSso.redirectUri = () => 'http://localhost:3003/auth/callback';
     BrowserSso.currentUri = () => pageUri;
-    BrowserSso.navigate = (url) => navigatedTo = url;
+    BrowserSso.navigate = (url) async {
+      navigatedTo = url;
+    };
     BrowserSso.cleanHistory = () => historyCleaned = true;
   });
 
@@ -47,7 +49,7 @@ void main() {
     BrowserSso.redirectUri = () => '';
     BrowserSso.currentUri = () => Uri.parse('about:blank');
     BrowserSso.cleanHistory = () {};
-    BrowserSso.navigate = (url) {};
+    BrowserSso.navigate = (url) async {};
   });
 
   SsoAuthLauncher launcherWith(http.Client client) => SsoAuthLauncher(

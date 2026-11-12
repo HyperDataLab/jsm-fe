@@ -32,7 +32,7 @@ Future<void> startLocalBackend() async {
       'SSO_ISSUER_URL',
       defaultValue: 'https://auth-api.hyperdatalab.org',
     )
-    ..['JSM_PARENT_PID'] = '${pid}';
+    ..['JSM_PARENT_PID'] = '$pid';
 
   final process = await Process.start(
     backend.path,

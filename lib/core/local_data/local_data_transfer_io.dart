@@ -7,8 +7,9 @@ import '../constants/api_endpoints.dart';
 
 Future<String> exportLocalData(Future<String?> Function() tokenProvider) async {
   final token = await tokenProvider();
-  if (token == null || token.isEmpty)
+  if (token == null || token.isEmpty) {
     throw StateError('Sign in again to export local data.');
+  }
 
   final client = http.Client();
   try {
@@ -50,12 +51,14 @@ Future<void> importLocalData(
   Future<String?> Function() tokenProvider,
 ) async {
   final token = await tokenProvider();
-  if (token == null || token.isEmpty)
+  if (token == null || token.isEmpty) {
     throw StateError('Sign in again to import local data.');
+  }
   final normalizedPath = archivePath.trim().replaceAll(RegExp(r'^"|"$'), '');
   final archive = File(normalizedPath);
-  if (!await archive.exists())
+  if (!await archive.exists()) {
     throw const FileSystemException('Archive file not found.');
+  }
 
   final request =
       http.MultipartRequest(

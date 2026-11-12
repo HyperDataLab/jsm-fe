@@ -135,13 +135,15 @@ void main() {
   });
 
   test(
-    'login issues the redirect and stays loading (web navigates away)',
+    'login reports cancellation when SSO closes without a session',
     () async {
       await cubit.login(AuthProvider.web);
       expect(repo.loginProvider, AuthProvider.web);
-      // On web the browser navigated away; the cubit stays in AuthLoading
-      // until the callback page load restarts the app.
-      expect(cubit.state, isA<AuthLoading>());
+      expect(cubit.state, isA<AuthFailure>());
+      expect(
+        (cubit.state as AuthFailure).message,
+        contains('Login was cancelled'),
+      );
     },
   );
 

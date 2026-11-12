@@ -85,7 +85,8 @@ class _LoginViewState extends State<LoginView>
   void _showFailure(BuildContext context, AuthFailure state) {
     if (_lastFailureMessage == state.message) return;
     _lastFailureMessage = state.message;
-    final message = state.message == 'Login was cancelled.' ||
+    final message =
+        state.message == 'Login was cancelled.' ||
             state.message == 'Login was cancelled or could not be completed.'
         ? context.l10n.loginCancelledMessage
         : state.message;

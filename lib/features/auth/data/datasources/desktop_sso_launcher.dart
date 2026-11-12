@@ -205,20 +205,24 @@ class DesktopSsoLauncher extends SsoAuthLauncher {
   Future<AuthResult> awaitCallbackAndComplete() async {
     try {
       final closed = _browserClosed;
-      final uri = await (closed == null
-          ? _callback.future
-          : Future.any([
-              _callback.future,
-              closed.then<Uri>(
-                (_) => throw const AuthLauncherException('Login was cancelled.'),
-              ),
-            ])).timeout(
-        const Duration(minutes: 5),
-        onTimeout: () => throw const AuthLauncherException(
-          'Login timed out. Please try again.',
-        ),
-      );
-      return completeFromLoopbackCallback(uri);
+      final uri =
+          await (closed == null
+                  ? _callback.future
+                  : Future.any([
+                      _callback.future,
+                      closed.then<Uri>(
+                        (_) => throw const AuthLauncherException(
+                          'Login was cancelled.',
+                        ),
+                      ),
+                    ]))
+              .timeout(
+                const Duration(minutes: 5),
+                onTimeout: () => throw const AuthLauncherException(
+                  'Login timed out. Please try again.',
+                ),
+              );
+      return await completeFromLoopbackCallback(uri);
     } catch (_) {
       await _server?.close(force: true);
       _server = null;

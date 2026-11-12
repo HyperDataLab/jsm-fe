@@ -1,9 +1,19 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jsm_fe/core/errors/exceptions.dart';
 import 'package:jsm_fe/features/auth/data/datasources/oidc_auth.dart';
 import 'package:jsm_fe/features/auth/domain/entities/auth_provider.dart';
 
 void main() {
+  setUp(() {
+    dotenv.loadFromString(
+      envString:
+          'SSO_ISSUER_URL=http://localhost:3001\n'
+          'SSO_CLIENT_ID=researchpulse-ecosystem\n'
+          'SSO_REDIRECT_URI=http://localhost:5173/auth/callback',
+    );
+  });
+
   group('PKCE / state generation', () {
     test('code verifier: 64 URL-safe chars, differs per call', () {
       final a = OidcAuthUrlBuilder.createCodeVerifier();

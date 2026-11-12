@@ -106,8 +106,13 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> logout() async {
     final ssoLauncher = launcher;
     if (ssoLauncher is SsoAuthLauncher) {
-      ssoLauncher.store.remove(SsoSessionKeys.localSession);
-      ssoLauncher.clearSession();
+      // Logout must remain best-effort even when local storage is unavailable.
+      try {
+        ssoLauncher.store.remove(SsoSessionKeys.localSession);
+      } catch (_) {}
+      try {
+        ssoLauncher.clearSession();
+      } catch (_) {}
     }
     if (ApiEndpoints.localDesktopEnabled) return;
     // Attempt best-effort SSO server session invalidation for web sessions.
