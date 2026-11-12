@@ -60,7 +60,7 @@ class ApiEndpoints {
       '$baseUrl/student/available-journals';
   static String get studentEvaluations => '$baseUrl/student/evaluations';
   static String get studentEvaluationHistory =>
-      '$baseUrl/student/evaluations/history';
+      '$baseUrl/student/evaluations';
   static String get studentEvaluationStats =>
       '$baseUrl/student/evaluations/stats';
   static String get studentRecommendations =>
@@ -71,7 +71,7 @@ class ApiEndpoints {
   static String get adminOpenAlexJournals => '$baseUrl/admin/journals/openalex';
   static String get adminImportJournal => '$baseUrl/admin/journals/import';
   static String get adminConfigurations =>
-      '$baseUrl/admin/configurations';
+      '$baseUrl/admin/journal-configurations';
   static String get adminAnalysisJobs => '$baseUrl/admin/analysis-jobs';
   static String get adminSnapshots => '$baseUrl/admin/snapshots';
   static String get adminStyleProfiles => '$baseUrl/admin/style-profiles';
