@@ -64,8 +64,11 @@ Future<bool> _isHealthy(Uri uri) async {
   try {
     final request = await client.getUrl(uri).timeout(const Duration(seconds: 2));
     final response = await request.close().timeout(const Duration(seconds: 2));
-    await response.drain<void>();
-    return response.statusCode == HttpStatus.ok;
+    final body = await response.transform(utf8.decoder).join();
+    final health = jsonDecode(body);
+    return response.statusCode == HttpStatus.ok &&
+        health is Map<String, dynamic> &&
+        health['local_mode'] == true;
   } catch (_) {
     return false;
   } finally {
