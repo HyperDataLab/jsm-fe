@@ -72,6 +72,11 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<AuthSession?> restoreSession() async {
     final ssoLauncher = launcher;
     if (ssoLauncher is SsoAuthLauncher) {
+      if (ApiEndpoints.localDesktopEnabled) {
+        final localSession = await _restoreLocalSession(ssoLauncher);
+        if (localSession != null) return localSession;
+      }
+
       final snapshot = await ssoLauncher.restoreStoredSession();
       if (snapshot == null) return null;
       final ssoUser = AuthUser(
@@ -81,6 +86,13 @@ class AuthRepositoryImpl implements AuthRepository {
         picture: snapshot.userInfo.picture,
         role: snapshot.userInfo.role,
       );
+      if (ApiEndpoints.localDesktopEnabled) {
+        return _exchangeForLocalSession(
+          ssoLauncher,
+          ssoUser,
+          snapshot.tokens.accessToken,
+        );
+      }
       return AuthSession(
         user: await _fetchBackendUser(ssoUser, snapshot.tokens.accessToken),
         accessToken: snapshot.tokens.accessToken,
@@ -94,9 +106,16 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> logout() async {
     final ssoLauncher = launcher;
     if (ssoLauncher is SsoAuthLauncher) {
-      ssoLauncher.clearSession();
+      // Logout must remain best-effort even when local storage is unavailable.
+      try {
+        ssoLauncher.store.remove(SsoSessionKeys.localSession);
+      } catch (_) {}
+      try {
+        ssoLauncher.clearSession();
+      } catch (_) {}
     }
-    // Attempt best-effort SSO server session invalidation
+    if (ApiEndpoints.localDesktopEnabled) return;
+    // Attempt best-effort SSO server session invalidation for web sessions.
     try {
       final client = httpClient ?? http.Client();
       final uri = Uri.parse('${ApiEndpoints.ssoIssuer}/api/v1/auth/logout');
@@ -110,8 +129,107 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<String?> currentToken() async {
     final ssoLauncher = launcher;
     if (ssoLauncher is! SsoAuthLauncher) return null;
+    if (ApiEndpoints.localDesktopEnabled) {
+      final stored = ssoLauncher.store.read(SsoSessionKeys.localSession);
+      if (stored != null) {
+        try {
+          final data = jsonDecode(stored) as Map<String, dynamic>;
+          final expiry = data['expires_at'] as int?;
+          if (expiry != null &&
+              expiry > DateTime.now().millisecondsSinceEpoch) {
+            return data['access_token'] as String?;
+          }
+          ssoLauncher.store.remove(SsoSessionKeys.localSession);
+          ssoLauncher.store.remove(SsoSessionKeys.tokens);
+          ssoLauncher.store.remove(SsoSessionKeys.user);
+          return null;
+        } catch (_) {}
+      }
+    }
     final snapshot = await ssoLauncher.restoreStoredSession();
     return snapshot?.tokens.accessToken;
+  }
+
+  Future<AuthSession?> _restoreLocalSession(SsoAuthLauncher ssoLauncher) async {
+    final serialized = ssoLauncher.store.read(SsoSessionKeys.localSession);
+    if (serialized == null) return null;
+    try {
+      final data = jsonDecode(serialized) as Map<String, dynamic>;
+      final expiry = data['expires_at'] as int?;
+      final token = data['access_token'] as String?;
+      if (expiry == null ||
+          token == null ||
+          expiry <= DateTime.now().millisecondsSinceEpoch) {
+        ssoLauncher.store.remove(SsoSessionKeys.localSession);
+        if (expiry != null && expiry <= DateTime.now().millisecondsSinceEpoch) {
+          ssoLauncher.store.remove(SsoSessionKeys.tokens);
+          ssoLauncher.store.remove(SsoSessionKeys.user);
+        }
+        return null;
+      }
+      final rawUser = data['user'] as Map<String, dynamic>? ?? const {};
+      final user = AuthUser(
+        sub: (rawUser['sub'] ?? rawUser['id'] ?? '').toString(),
+        email: rawUser['email'] as String?,
+        name: (rawUser['name'] ?? rawUser['full_name']) as String?,
+        role: rawUser['role'] as String?,
+      );
+      return AuthSession(
+        user: await _fetchBackendUser(user, token),
+        accessToken: token,
+      );
+    } catch (_) {
+      ssoLauncher.store.remove(SsoSessionKeys.localSession);
+      return null;
+    }
+  }
+
+  Future<AuthSession?> _exchangeForLocalSession(
+    SsoAuthLauncher ssoLauncher,
+    AuthUser ssoUser,
+    String ssoToken,
+  ) async {
+    try {
+      final client = httpClient ?? http.Client();
+      final response = await client
+          .post(
+            Uri.parse('${ApiEndpoints.baseUrl}/auth/local-session'),
+            headers: {'Authorization': 'Bearer $ssoToken'},
+          )
+          .timeout(const Duration(seconds: 8));
+      if (response.statusCode != 200) return null;
+
+      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = decoded['data'] as Map<String, dynamic>?;
+      final token = data?['access_token'] as String?;
+      final expiresAt = DateTime.tryParse(data?['expires_at'] as String? ?? '');
+      if (token == null || expiresAt == null) return null;
+      final rawUser = data?['user'] as Map<String, dynamic>? ?? const {};
+      final user = AuthUser(
+        sub: (rawUser['id'] ?? ssoUser.sub).toString(),
+        email: rawUser['email'] as String? ?? ssoUser.email,
+        name: (rawUser['full_name'] ?? ssoUser.name) as String?,
+        picture: ssoUser.picture,
+        role: rawUser['role'] as String? ?? ssoUser.role,
+      );
+      ssoLauncher.store.write(
+        SsoSessionKeys.localSession,
+        jsonEncode({
+          'access_token': token,
+          'expires_at': expiresAt.toUtc().millisecondsSinceEpoch,
+          'user': {
+            'sub': user.sub,
+            'email': user.email,
+            'name': user.name,
+            'role': user.role,
+          },
+        }),
+      );
+      return AuthSession(user: user, accessToken: token);
+    } catch (error) {
+      developer.log('Could not create a local session: $error', name: 'auth');
+      return null;
+    }
   }
 
   /// Reads the effective application role from the backend user record. The

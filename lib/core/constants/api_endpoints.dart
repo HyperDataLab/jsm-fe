@@ -3,6 +3,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class ApiEndpoints {
   ApiEndpoints._();
 
+  static const bool localDesktopEnabled = bool.fromEnvironment(
+    'JSM_LOCAL_DESKTOP',
+  );
+
   static String? _getEnv(String key) {
     if (dotenv.isInitialized) {
       return dotenv.maybeGet(key);
@@ -31,7 +35,7 @@ class ApiEndpoints {
       _getEnv('SSO_ISSUER_URL') ??
       const String.fromEnvironment(
         'SSO_ISSUER_URL',
-        defaultValue: 'http://localhost:3001',
+        defaultValue: 'https://auth-api.hyperdatalab.org',
       );
 
   static String get ssoClientId =>
@@ -59,8 +63,7 @@ class ApiEndpoints {
   static String get studentAvailableJournals =>
       '$baseUrl/student/available-journals';
   static String get studentEvaluations => '$baseUrl/student/evaluations';
-  static String get studentEvaluationHistory =>
-      '$baseUrl/student/evaluations/history';
+  static String get studentEvaluationHistory => '$baseUrl/student/evaluations';
   static String get studentEvaluationStats =>
       '$baseUrl/student/evaluations/stats';
   static String get studentRecommendations =>
@@ -71,7 +74,7 @@ class ApiEndpoints {
   static String get adminOpenAlexJournals => '$baseUrl/admin/journals/openalex';
   static String get adminImportJournal => '$baseUrl/admin/journals/import';
   static String get adminConfigurations =>
-      '$baseUrl/admin/configurations';
+      '$baseUrl/admin/journal-configurations';
   static String get adminAnalysisJobs => '$baseUrl/admin/analysis-jobs';
   static String get adminSnapshots => '$baseUrl/admin/snapshots';
   static String get adminStyleProfiles => '$baseUrl/admin/style-profiles';

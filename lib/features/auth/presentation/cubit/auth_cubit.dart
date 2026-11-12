@@ -68,10 +68,12 @@ class AuthCubit extends Cubit<AuthState> {
       } else {
         // The web popup can close without returning an SSO session. End the
         // loading state and let the login page report the failed attempt.
-        emit(const AuthFailure(
-          message: 'Login was cancelled or could not be completed.',
-          showOnLoginPage: true,
-        ));
+        emit(
+          const AuthFailure(
+            message: 'Login was cancelled or could not be completed.',
+            showOnLoginPage: true,
+          ),
+        );
       }
     } catch (e) {
       emit(AuthFailure(message: _sanitize(e), showOnLoginPage: true));

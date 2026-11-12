@@ -216,7 +216,7 @@ class AdminApiClient {
   Future<Map<String, dynamic>> triggerAnalysis(String configId) async {
     try {
       final uri = Uri.parse(
-        '${ApiEndpoints.adminConfigurations}/$configId/trigger',
+        '${ApiEndpoints.adminConfigurations}/$configId/analyze',
       );
       final res = await _client.post(uri, headers: await _headers());
       if (res.statusCode == 200 ||
