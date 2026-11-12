@@ -23,7 +23,9 @@ class FileSsoSessionStore implements SsoSessionStore {
     try {
       final decoded = jsonDecode(_file.readAsStringSync());
       if (decoded is Map<String, dynamic>) {
-        _map.addAll(decoded.map((key, value) => MapEntry(key, value.toString())));
+        _map.addAll(
+          decoded.map((key, value) => MapEntry(key, value.toString())),
+        );
       }
     } catch (_) {
       // A missing or malformed local session is treated as signed out.
@@ -33,11 +35,14 @@ class FileSsoSessionStore implements SsoSessionStore {
   final Map<String, String> _map = {};
 
   File get _file {
-    final root = Platform.environment['LOCALAPPDATA'] ??
+    final root =
+        Platform.environment['LOCALAPPDATA'] ??
         Platform.environment['HOME'] ??
         Directory.current.path;
-    return File('$root${Platform.pathSeparator}HyperDataLab'
-        '${Platform.pathSeparator}JSM${Platform.pathSeparator}auth_session.json');
+    return File(
+      '$root${Platform.pathSeparator}HyperDataLab'
+      '${Platform.pathSeparator}JSM${Platform.pathSeparator}auth_session.json',
+    );
   }
 
   void _persist() {

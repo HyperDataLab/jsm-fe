@@ -55,7 +55,11 @@ class _LocalDataBackupCardState extends State<LocalDataBackupCard> {
     final accepted = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(context.l10n.isVietnamese ? 'Khôi phục dữ liệu?' : 'Restore local data?'),
+        title: Text(
+          context.l10n.isVietnamese
+              ? 'Khôi phục dữ liệu?'
+              : 'Restore local data?',
+        ),
         content: Text(
           context.l10n.isVietnamese
               ? 'Dữ liệu hiện tại sẽ được thay bằng dữ liệu trong tệp sao lưu. Một bản dự phòng hiện tại vẫn được giữ lại.'

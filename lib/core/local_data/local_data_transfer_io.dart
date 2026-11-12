@@ -7,14 +7,17 @@ import '../constants/api_endpoints.dart';
 
 Future<String> exportLocalData(Future<String?> Function() tokenProvider) async {
   final token = await tokenProvider();
-  if (token == null || token.isEmpty) throw StateError('Sign in again to export local data.');
+  if (token == null || token.isEmpty)
+    throw StateError('Sign in again to export local data.');
 
   final client = http.Client();
   try {
     final response = await client
         .send(
-          http.Request('GET', Uri.parse('${ApiEndpoints.baseUrl}/local-data/export'))
-            ..headers['Authorization'] = 'Bearer $token',
+          http.Request(
+            'GET',
+            Uri.parse('${ApiEndpoints.baseUrl}/local-data/export'),
+          )..headers['Authorization'] = 'Bearer $token',
         )
         .timeout(const Duration(minutes: 5));
     if (response.statusCode != 200) {
@@ -22,7 +25,8 @@ Future<String> exportLocalData(Future<String?> Function() tokenProvider) async {
       throw StateError(_errorMessage(body, response.statusCode));
     }
 
-    final profile = Platform.environment['USERPROFILE'] ??
+    final profile =
+        Platform.environment['USERPROFILE'] ??
         Platform.environment['LOCALAPPDATA'] ??
         Directory.current.path;
     final exportDirectory = Directory(
@@ -46,21 +50,28 @@ Future<void> importLocalData(
   Future<String?> Function() tokenProvider,
 ) async {
   final token = await tokenProvider();
-  if (token == null || token.isEmpty) throw StateError('Sign in again to import local data.');
+  if (token == null || token.isEmpty)
+    throw StateError('Sign in again to import local data.');
   final normalizedPath = archivePath.trim().replaceAll(RegExp(r'^"|"$'), '');
   final archive = File(normalizedPath);
-  if (!await archive.exists()) throw const FileSystemException('Archive file not found.');
+  if (!await archive.exists())
+    throw const FileSystemException('Archive file not found.');
 
-  final request = http.MultipartRequest(
-    'POST',
-    Uri.parse('${ApiEndpoints.baseUrl}/local-data/import'),
-  )
-    ..headers['Authorization'] = 'Bearer $token'
-    ..fields['replace_existing'] = 'true'
-    ..files.add(await http.MultipartFile.fromPath('archive_file', archive.path));
+  final request =
+      http.MultipartRequest(
+          'POST',
+          Uri.parse('${ApiEndpoints.baseUrl}/local-data/import'),
+        )
+        ..headers['Authorization'] = 'Bearer $token'
+        ..fields['replace_existing'] = 'true'
+        ..files.add(
+          await http.MultipartFile.fromPath('archive_file', archive.path),
+        );
   final client = http.Client();
   try {
-    final response = await client.send(request).timeout(const Duration(minutes: 10));
+    final response = await client
+        .send(request)
+        .timeout(const Duration(minutes: 10));
     final body = await response.stream.bytesToString();
     if (response.statusCode != 200) {
       throw StateError(_errorMessage(body, response.statusCode));

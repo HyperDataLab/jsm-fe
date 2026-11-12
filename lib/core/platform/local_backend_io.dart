@@ -62,7 +62,9 @@ Future<void> startLocalBackend() async {
 Future<bool> _isHealthy(Uri uri) async {
   final client = HttpClient()..connectionTimeout = const Duration(seconds: 1);
   try {
-    final request = await client.getUrl(uri).timeout(const Duration(seconds: 2));
+    final request = await client
+        .getUrl(uri)
+        .timeout(const Duration(seconds: 2));
     final response = await request.close().timeout(const Duration(seconds: 2));
     final body = await response.transform(utf8.decoder).join();
     final health = jsonDecode(body);

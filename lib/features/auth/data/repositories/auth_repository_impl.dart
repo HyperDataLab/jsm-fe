@@ -87,7 +87,11 @@ class AuthRepositoryImpl implements AuthRepository {
         role: snapshot.userInfo.role,
       );
       if (ApiEndpoints.localDesktopEnabled) {
-        return _exchangeForLocalSession(ssoLauncher, ssoUser, snapshot.tokens.accessToken);
+        return _exchangeForLocalSession(
+          ssoLauncher,
+          ssoUser,
+          snapshot.tokens.accessToken,
+        );
       }
       return AuthSession(
         user: await _fetchBackendUser(ssoUser, snapshot.tokens.accessToken),
@@ -126,7 +130,8 @@ class AuthRepositoryImpl implements AuthRepository {
         try {
           final data = jsonDecode(stored) as Map<String, dynamic>;
           final expiry = data['expires_at'] as int?;
-          if (expiry != null && expiry > DateTime.now().millisecondsSinceEpoch) {
+          if (expiry != null &&
+              expiry > DateTime.now().millisecondsSinceEpoch) {
             return data['access_token'] as String?;
           }
           ssoLauncher.store.remove(SsoSessionKeys.localSession);
@@ -147,7 +152,8 @@ class AuthRepositoryImpl implements AuthRepository {
       final data = jsonDecode(serialized) as Map<String, dynamic>;
       final expiry = data['expires_at'] as int?;
       final token = data['access_token'] as String?;
-      if (expiry == null || token == null ||
+      if (expiry == null ||
+          token == null ||
           expiry <= DateTime.now().millisecondsSinceEpoch) {
         ssoLauncher.store.remove(SsoSessionKeys.localSession);
         if (expiry != null && expiry <= DateTime.now().millisecondsSinceEpoch) {
