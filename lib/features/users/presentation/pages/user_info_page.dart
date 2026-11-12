@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../widgets/local_data_backup_card.dart';
+
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../../auth/domain/entities/auth_user.dart';
@@ -153,6 +155,7 @@ class UserInfoPage extends StatelessWidget {
                       );
                     },
                   ),
+                  const LocalDataBackupCard(),
                 ],
               ),
             ),

@@ -105,7 +105,8 @@ class AuthRepositoryImpl implements AuthRepository {
       ssoLauncher.store.remove(SsoSessionKeys.localSession);
       ssoLauncher.clearSession();
     }
-    // Attempt best-effort SSO server session invalidation
+    if (ApiEndpoints.localDesktopEnabled) return;
+    // Attempt best-effort SSO server session invalidation for web sessions.
     try {
       final client = httpClient ?? http.Client();
       final uri = Uri.parse('${ApiEndpoints.ssoIssuer}/api/v1/auth/logout');
