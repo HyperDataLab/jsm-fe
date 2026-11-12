@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Hyperdata Lab FE Design System Tokens
 /// Primary brand color: #0071bc

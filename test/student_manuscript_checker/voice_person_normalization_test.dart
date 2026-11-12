@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jsm_fe/features/student_manuscript_checker/domain/entities/voice_person_comparison.dart';
 import 'package:jsm_fe/features/student_manuscript_checker/presentation/widgets/voice_person_card.dart';

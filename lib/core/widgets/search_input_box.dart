@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Reusable Search Input Box matching HyperData Lab / ResearchPulse Design System
 /// - Height: 38px (sleek, compact)

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Reusable account form field wrapper with label + validation error slot.
 class AccountFormField extends StatelessWidget {
