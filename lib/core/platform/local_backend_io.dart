@@ -21,8 +21,14 @@ Future<void> startLocalBackend() async {
   }
 
   final environment = Map<String, String>.from(Platform.environment)
+    ..['LOCAL_DATA_DIR'] =
+        '${Platform.environment['LOCALAPPDATA'] ??
+        Platform.environment['USERPROFILE'] ??
+        executableDirectory.path}${Platform.pathSeparator}HyperDataLab'
+        '${Platform.pathSeparator}JSM'
     ..['LOCAL_MODE'] = 'true'
     ..['DEBUG'] = 'false'
+    ..['ENVIRONMENT'] = 'desktop'
     ..['API_PORT'] = '$port'
     ..['SSO_ISSUER_URL'] = const String.fromEnvironment(
       'SSO_ISSUER_URL',
