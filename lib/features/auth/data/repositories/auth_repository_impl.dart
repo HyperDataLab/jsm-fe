@@ -128,6 +128,10 @@ class AuthRepositoryImpl implements AuthRepository {
           if (expiry != null && expiry > DateTime.now().millisecondsSinceEpoch) {
             return data['access_token'] as String?;
           }
+          ssoLauncher.store.remove(SsoSessionKeys.localSession);
+          ssoLauncher.store.remove(SsoSessionKeys.tokens);
+          ssoLauncher.store.remove(SsoSessionKeys.user);
+          return null;
         } catch (_) {}
       }
     }
