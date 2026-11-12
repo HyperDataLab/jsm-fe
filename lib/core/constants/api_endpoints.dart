@@ -3,6 +3,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class ApiEndpoints {
   ApiEndpoints._();
 
+  static const bool localDesktopEnabled =
+      bool.fromEnvironment('JSM_LOCAL_DESKTOP');
+
   static String? _getEnv(String key) {
     if (dotenv.isInitialized) {
       return dotenv.maybeGet(key);
@@ -31,7 +34,7 @@ class ApiEndpoints {
       _getEnv('SSO_ISSUER_URL') ??
       const String.fromEnvironment(
         'SSO_ISSUER_URL',
-        defaultValue: 'http://localhost:3001',
+        defaultValue: 'https://auth-api.hyperdatalab.org',
       );
 
   static String get ssoClientId =>
