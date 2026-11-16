@@ -85,6 +85,8 @@ class AuthRepositoryImpl implements AuthRepository {
         name: snapshot.userInfo.name,
         picture: snapshot.userInfo.picture,
         role: snapshot.userInfo.role,
+        studentId: snapshot.userInfo.studentId,
+        major: snapshot.userInfo.major,
       );
       if (ApiEndpoints.localDesktopEnabled) {
         return _exchangeForLocalSession(
@@ -104,6 +106,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> logout() async {
+    String? token;
+    try {
+      token = await currentToken();
+    } catch (_) {}
     final ssoLauncher = launcher;
     if (ssoLauncher is SsoAuthLauncher) {
       // Logout must remain best-effort even when local storage is unavailable.
@@ -115,13 +121,21 @@ class AuthRepositoryImpl implements AuthRepository {
       } catch (_) {}
     }
     if (ApiEndpoints.localDesktopEnabled) return;
-    // Attempt best-effort SSO server session invalidation for web sessions.
-    try {
-      final client = httpClient ?? http.Client();
-      final uri = Uri.parse('${ApiEndpoints.ssoIssuer}/api/v1/auth/logout');
-      await client.post(uri).timeout(const Duration(seconds: 3));
-    } catch (_) {
-      // Local session is cleared; ignore network/logout errors
+    // Attempt best-effort SSO server token revocation for web sessions.
+    if (token != null && token.isNotEmpty) {
+      try {
+        final client = httpClient ?? http.Client();
+        final uri = Uri.parse('${ApiEndpoints.ssoIssuer}/oauth/revoke');
+        await client
+            .post(
+              uri,
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({'token': token}),
+            )
+            .timeout(const Duration(seconds: 3));
+      } catch (_) {
+        // Local session is cleared; ignore network/logout errors
+      }
     }
   }
 
@@ -211,6 +225,8 @@ class AuthRepositoryImpl implements AuthRepository {
         name: (rawUser['full_name'] ?? ssoUser.name) as String?,
         picture: ssoUser.picture,
         role: rawUser['role'] as String? ?? ssoUser.role,
+        studentId: rawUser['student_id'] as String? ?? ssoUser.studentId,
+        major: rawUser['major'] as String? ?? ssoUser.major,
       );
       ssoLauncher.store.write(
         SsoSessionKeys.localSession,
@@ -222,6 +238,8 @@ class AuthRepositoryImpl implements AuthRepository {
             'email': user.email,
             'name': user.name,
             'role': user.role,
+            'student_id': user.studentId,
+            'major': user.major,
           },
         }),
       );
@@ -271,6 +289,8 @@ class AuthRepositoryImpl implements AuthRepository {
         name: (profile['full_name'] ?? fallback.name) as String?,
         picture: fallback.picture,
         role: profile['role'] as String,
+        studentId: profile['student_id'] as String? ?? fallback.studentId,
+        major: profile['major'] as String? ?? fallback.major,
       );
     } catch (_) {
       // Authentication should still work when the JSM API is temporarily

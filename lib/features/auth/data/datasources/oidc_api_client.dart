@@ -41,13 +41,15 @@ class SsoTokens {
       DateTime.now().millisecondsSinceEpoch >= expiresAtMs!;
 }
 
-/// OIDC userinfo profile from GET /api/v1/oidc/userinfo.
+/// OAuth 2.0 userinfo profile from GET /oauth/userinfo.
 class SsoUserInfo {
   final String sub;
   final String? email;
   final String? name;
   final String? picture;
   final String? role;
+  final String? studentId;
+  final String? major;
 
   const SsoUserInfo({
     required this.sub,
@@ -55,6 +57,8 @@ class SsoUserInfo {
     this.name,
     this.picture,
     this.role,
+    this.studentId,
+    this.major,
   });
 
   Map<String, dynamic> toJson() => {
@@ -63,6 +67,8 @@ class SsoUserInfo {
     if (name != null) 'name': name,
     if (picture != null) 'picture': picture,
     if (role != null) 'role': role,
+    if (studentId != null) 'student_id': studentId,
+    if (major != null) 'major': major,
   };
 
   factory SsoUserInfo.fromJson(Map<String, dynamic> json) {
@@ -81,6 +87,8 @@ class SsoUserInfo {
               as String?,
       picture: (json['picture'] ?? json['avatar']) as String?,
       role: resolvedRole,
+      studentId: (json['student_id'] ?? json['studentId']) as String?,
+      major: json['major'] as String?,
     );
   }
 }
@@ -119,7 +127,7 @@ class OidcApiClient {
     required String redirectUri,
     required String codeVerifier,
   }) async {
-    final uri = Uri.parse('${ApiEndpoints.ssoIssuer}/api/v1/oidc/token');
+    final uri = Uri.parse('${ApiEndpoints.ssoIssuer}/oauth/token');
     http.Response response;
     try {
       response = await _client.post(
@@ -165,7 +173,7 @@ class OidcApiClient {
 
   /// Fetches the canonical user profile.
   Future<SsoUserInfo> fetchUserInfo(String accessToken) async {
-    final uri = Uri.parse('${ApiEndpoints.ssoIssuer}/api/v1/oidc/userinfo');
+    final uri = Uri.parse('${ApiEndpoints.ssoIssuer}/oauth/userinfo');
     http.Response response;
     try {
       response = await _client.get(
@@ -187,6 +195,21 @@ class OidcApiClient {
       );
     } catch (_) {
       throw const ServerException('Malformed user profile response.');
+    }
+  }
+
+  /// Revokes an access token via POST /oauth/revoke.
+  Future<bool> revokeToken(String token) async {
+    final uri = Uri.parse('${ApiEndpoints.ssoIssuer}/oauth/revoke');
+    try {
+      final response = await _client.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'token': token}),
+      );
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
     }
   }
 

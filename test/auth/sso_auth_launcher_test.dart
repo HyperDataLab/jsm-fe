@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:jsm_fe/core/constants/api_endpoints.dart';
 import 'package:jsm_fe/core/errors/exceptions.dart';
 import 'package:jsm_fe/features/auth/data/datasources/browser_sso_seam.dart';
 import 'package:jsm_fe/features/auth/data/datasources/oidc_auth.dart';
@@ -65,12 +66,12 @@ void main() {
       // Redirect issued with the required parameters.
       expect(navigatedTo, isNotNull);
       final uri = Uri.parse(navigatedTo!);
-      expect(uri.path, '/api/v1/oidc/authorize');
+      expect(uri.path, '/oauth/authorize');
       final q = uri.queryParameters;
-      expect(q['client_id'], 'researchpulse-ecosystem');
+      expect(q['client_id'], ApiEndpoints.ssoClientId);
       expect(q['redirect_uri'], 'http://localhost:3003/auth/callback');
       expect(q['response_type'], 'code');
-      expect(q['scope'], 'openid profile email');
+      expect(q['scope'], 'email profile hyperdatalab_profile');
       expect(q['code_challenge_method'], 'S256');
       expect(q['state'], isNotEmpty);
       expect(q['state'], isNot(equals('xyz')));
@@ -101,7 +102,7 @@ void main() {
 
   group('completeFromCallback', () {
     http.Client okClient({String userSub = 'u1'}) => MockClient((req) async {
-      if (req.url.path.endsWith('/oidc/token')) {
+      if (req.url.path.endsWith('/token')) {
         return http.Response(
           jsonEncode({
             'access_token': 'at-1',
@@ -113,7 +114,7 @@ void main() {
           200,
         );
       }
-      if (req.url.path.endsWith('/oidc/userinfo')) {
+      if (req.url.path.endsWith('/userinfo')) {
         expect(req.headers['Authorization'], 'Bearer at-1');
         return http.Response(
           jsonEncode({
@@ -236,7 +237,7 @@ void main() {
 
     test('userinfo failure (non-200): safe failure', () async {
       final client = MockClient((req) async {
-        if (req.url.path.endsWith('/oidc/token')) {
+        if (req.url.path.endsWith('/token')) {
           return http.Response(
             jsonEncode({
               'access_token': 'at-1',
@@ -274,7 +275,7 @@ void main() {
         final jwt = 'h.$payload.s';
 
         final client = MockClient((req) async {
-          if (req.url.path.endsWith('/oidc/token')) {
+          if (req.url.path.endsWith('/token')) {
             return http.Response(
               jsonEncode({
                 'access_token': 'at-fast',
@@ -285,7 +286,7 @@ void main() {
               200,
             );
           }
-          if (req.url.path.endsWith('/oidc/userinfo')) {
+          if (req.url.path.endsWith('/userinfo')) {
             return http.Response('server error', 500);
           }
           fail('unexpected request');
