@@ -56,10 +56,7 @@ void main() {
         codeVerifier: 'the-verifier',
       );
 
-      expect(
-        captured.url.toString(),
-        'http://localhost:3001/oauth/token',
-      );
+      expect(captured.url.toString(), 'http://localhost:3001/oauth/token');
       expect(captured.method, 'POST');
       expect(jsonDecode(captured.body), {
         'grant_type': 'authorization_code',
@@ -178,10 +175,7 @@ void main() {
 
         final user = await api.fetchUserInfo('at-secret-value');
 
-        expect(
-          captured.url.toString(),
-          'http://localhost:3001/oauth/userinfo',
-        );
+        expect(captured.url.toString(), 'http://localhost:3001/oauth/userinfo');
         expect(captured.headers['Authorization'], 'Bearer at-secret-value');
         expect(user.sub, 'user-1');
         expect(user.email, 'user@example.com');
@@ -215,24 +209,29 @@ void main() {
   });
 
   group('revokeToken', () {
-    test('success: posts to /oauth/revoke with token and returns true', () async {
-      late http.Request captured;
-      final client = MockClient((request) async {
-        captured = request;
-        return _json({'revoked': true});
-      });
-      final api = OidcApiClient(client: client);
+    test(
+      'success: posts to /oauth/revoke with token and returns true',
+      () async {
+        late http.Request captured;
+        final client = MockClient((request) async {
+          captured = request;
+          return _json({'revoked': true});
+        });
+        final api = OidcApiClient(client: client);
 
-      final success = await api.revokeToken('cf_at_123');
+        final success = await api.revokeToken('cf_at_123');
 
-      expect(success, isTrue);
-      expect(captured.url.toString(), 'http://localhost:3001/oauth/revoke');
-      expect(captured.method, 'POST');
-      expect(jsonDecode(captured.body), {'token': 'cf_at_123'});
-    });
+        expect(success, isTrue);
+        expect(captured.url.toString(), 'http://localhost:3001/oauth/revoke');
+        expect(captured.method, 'POST');
+        expect(jsonDecode(captured.body), {'token': 'cf_at_123'});
+      },
+    );
 
     test('failure: returns false when status is non-200 or throws', () async {
-      final client = MockClient((request) async => _json({'error': 'invalid'}, 400));
+      final client = MockClient(
+        (request) async => _json({'error': 'invalid'}, 400),
+      );
       final api = OidcApiClient(client: client);
 
       final success = await api.revokeToken('bad-token');
