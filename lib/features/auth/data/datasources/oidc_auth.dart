@@ -50,8 +50,7 @@ class OidcAuthUrlBuilder {
       'client_id': ApiEndpoints.ssoClientId,
       'redirect_uri': redirectUri,
       'response_type': 'code',
-      'scope': 'openid profile email',
-      'prompt': 'select_account',
+      'scope': 'email profile hyperdatalab_profile',
       'state': state,
       'code_challenge': codeChallenge,
       'code_challenge_method': 'S256',
@@ -62,7 +61,7 @@ class OidcAuthUrlBuilder {
               '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}',
         )
         .join('&');
-    return '${ApiEndpoints.ssoIssuer}/api/v1/oidc/authorize?$query';
+    return '${ApiEndpoints.ssoIssuer}/oauth/authorize?$query';
   }
 }
 

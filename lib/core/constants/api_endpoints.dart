@@ -29,20 +29,20 @@ class ApiEndpoints {
   static String get journals => '$baseUrl/journals';
   static String get publicationTrends => '$baseUrl/trends';
 
-  // Central SSO (OIDC). Issuer/client id are public identifiers (no secret
-  // is ever shipped in the client). Loaded from .env or --dart-define.
+  // Central SSO (HyperDataLab / ResearchPulse Cloudflare Worker OAuth 2.0 PKCE).
+  // Issuer/client id are public identifiers (no secret is shipped in the client).
   static String get ssoIssuer =>
       _getEnv('SSO_ISSUER_URL') ??
       const String.fromEnvironment(
         'SSO_ISSUER_URL',
-        defaultValue: 'https://auth-api.hyperdatalab.org',
+        defaultValue: 'https://rpr-grobid-gateway.hpl-storage.workers.dev',
       );
 
   static String get ssoClientId =>
       _getEnv('SSO_CLIENT_ID') ??
       const String.fromEnvironment(
         'SSO_CLIENT_ID',
-        defaultValue: 'researchpulse-ecosystem',
+        defaultValue: 'hd_jsm',
       );
 
   static String get ssoRedirectUri =>

@@ -20,6 +20,9 @@ Map<String, dynamic> _userBody() => {
   'email': 'user@example.com',
   'name': 'Example User',
   'picture': 'https://cdn.example.com/avatar.png',
+  'role': 'STUDENT',
+  'student_id': 'SE123456',
+  'major': 'Software Engineering',
 };
 
 http.Response _json(Object body, [int status = 200]) => http.Response(
@@ -55,7 +58,7 @@ void main() {
 
       expect(
         captured.url.toString(),
-        'http://localhost:3001/api/v1/oidc/token',
+        'http://localhost:3001/oauth/token',
       );
       expect(captured.method, 'POST');
       expect(jsonDecode(captured.body), {
@@ -177,13 +180,16 @@ void main() {
 
         expect(
           captured.url.toString(),
-          'http://localhost:3001/api/v1/oidc/userinfo',
+          'http://localhost:3001/oauth/userinfo',
         );
         expect(captured.headers['Authorization'], 'Bearer at-secret-value');
         expect(user.sub, 'user-1');
         expect(user.email, 'user@example.com');
         expect(user.name, 'Example User');
         expect(user.picture, 'https://cdn.example.com/avatar.png');
+        expect(user.role, 'STUDENT');
+        expect(user.studentId, 'SE123456');
+        expect(user.major, 'Software Engineering');
       },
     );
 
@@ -205,6 +211,32 @@ void main() {
         api.fetchUserInfo('ok'),
         throwsA(isA<ServerException>()),
       );
+    });
+  });
+
+  group('revokeToken', () {
+    test('success: posts to /oauth/revoke with token and returns true', () async {
+      late http.Request captured;
+      final client = MockClient((request) async {
+        captured = request;
+        return _json({'revoked': true});
+      });
+      final api = OidcApiClient(client: client);
+
+      final success = await api.revokeToken('cf_at_123');
+
+      expect(success, isTrue);
+      expect(captured.url.toString(), 'http://localhost:3001/oauth/revoke');
+      expect(captured.method, 'POST');
+      expect(jsonDecode(captured.body), {'token': 'cf_at_123'});
+    });
+
+    test('failure: returns false when status is non-200 or throws', () async {
+      final client = MockClient((request) async => _json({'error': 'invalid'}, 400));
+      final api = OidcApiClient(client: client);
+
+      final success = await api.revokeToken('bad-token');
+      expect(success, isFalse);
     });
   });
 
