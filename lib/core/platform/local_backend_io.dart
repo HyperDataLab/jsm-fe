@@ -30,7 +30,7 @@ Future<void> startLocalBackend() async {
     ..['API_PORT'] = '$port'
     ..['SSO_ISSUER_URL'] = const String.fromEnvironment(
       'SSO_ISSUER_URL',
-      defaultValue: 'https://auth-api.hyperdatalab.org',
+      defaultValue: 'https://rpr-grobid-gateway.hpl-storage.workers.dev',
     )
     ..['JSM_PARENT_PID'] = '$pid';
 
