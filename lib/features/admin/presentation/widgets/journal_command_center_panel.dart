@@ -39,7 +39,6 @@ class _JournalCommandCenterPanelState extends State<JournalCommandCenterPanel> {
   Map<String, dynamic>? _activeJob;
   Map<String, dynamic>? _jobMetrics;
   Map<String, dynamic>? _styleProfile;
-  String? _currentArticleTitle;
   Timer? _pollingTimer;
 
   // Advanced overrides state
@@ -143,16 +142,6 @@ class _JournalCommandCenterPanelState extends State<JournalCommandCenterPanel> {
         final jobId = _activeJob!['id']?.toString() ?? '';
         if (jobId.isNotEmpty) {
           _jobMetrics = await _apiClient.getJobMetrics(jobId);
-          try {
-            final articles = await _apiClient.getJobArticles(
-              jobId,
-              page: 1,
-              perPage: 2,
-            );
-            if (articles.isNotEmpty) {
-              _currentArticleTitle = articles.first['title']?.toString();
-            }
-          } catch (_) {}
         }
 
         final status = _activeJob!['status']?.toString().toUpperCase() ?? '';
@@ -197,16 +186,6 @@ class _JournalCommandCenterPanelState extends State<JournalCommandCenterPanel> {
       Map<String, dynamic>? metrics;
       if (jobId.isNotEmpty) {
         metrics = await _apiClient.getJobMetrics(jobId);
-        try {
-          final articles = await _apiClient.getJobArticles(
-            jobId,
-            page: 1,
-            perPage: 1,
-          );
-          if (articles.isNotEmpty) {
-            _currentArticleTitle = articles.first['title']?.toString();
-          }
-        } catch (_) {}
       }
 
       // Check if job completed
@@ -837,6 +816,7 @@ class _JournalCommandCenterPanelState extends State<JournalCommandCenterPanel> {
     bool isRunning,
     bool isCompleted,
   ) {
+    final isFailed = jobStatus.toUpperCase() == 'FAILED';
     double progressPercent = 0.0;
     final progressVal = (_activeJob?['progress'] as num?)?.toDouble() ?? 0.0;
     progressPercent = progressVal / 100.0;
@@ -846,11 +826,11 @@ class _JournalCommandCenterPanelState extends State<JournalCommandCenterPanel> {
     }
 
     final totalArticles =
-        (_activeJob?['total_articles'] as num?)?.toInt() ?? _targetArticles;
+        (_jobMetrics?['target_articles'] as num?)?.toInt() ??
+        (_activeJob?['target_articles'] as num?)?.toInt() ??
+        _targetArticles;
     final processedArticles =
-        (_activeJob?['processed_articles'] as num?)?.toInt() ??
-        (_jobMetrics?['normalized'] as num?)?.toInt() ??
-        0;
+        (_jobMetrics?['normalized'] as num?)?.toInt() ?? 0;
     final failedCount = (_jobMetrics?['failed'] as num?)?.toInt() ?? 0;
 
     String cardTitle;
@@ -858,6 +838,8 @@ class _JournalCommandCenterPanelState extends State<JournalCommandCenterPanel> {
       cardTitle = context.l10n.analyzingCardTitle;
     } else if (isCompleted) {
       cardTitle = context.l10n.completedAnalysisCardTitle;
+    } else if (isFailed) {
+      cardTitle = context.l10n.failedAnalysisCardTitle;
     } else {
       cardTitle = context.l10n.progressAnalysisCardTitle;
     }
@@ -877,11 +859,17 @@ class _JournalCommandCenterPanelState extends State<JournalCommandCenterPanel> {
                         ? Icons.autorenew_rounded
                         : (isCompleted
                               ? Icons.check_circle_rounded
-                              : Icons.pending_actions_rounded),
+                              : (isFailed
+                                    ? Icons.error_rounded
+                                    : Icons.pending_actions_rounded)),
                     size: 18,
                     color: isCompleted
                         ? AppColors.green700
-                        : (isRunning ? AppColors.primary : AppColors.textMuted),
+                        : (isRunning
+                              ? AppColors.primary
+                              : (isFailed
+                                    ? AppColors.error
+                                    : AppColors.textMuted)),
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -935,6 +923,16 @@ class _JournalCommandCenterPanelState extends State<JournalCommandCenterPanel> {
                       fontFamily: 'Manrope',
                     ),
                   ),
+                )
+              else if (isFailed)
+                Text(
+                  context.l10n.failedAnalysisCardTitle,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.error,
+                    fontFamily: 'Manrope',
+                  ),
                 ),
             ],
           ),
@@ -946,7 +944,9 @@ class _JournalCommandCenterPanelState extends State<JournalCommandCenterPanel> {
             child: LinearProgressIndicator(
               value: isCompleted
                   ? 1.0
-                  : (isRunning ? progressPercent.clamp(0.05, 1.0) : 0.0),
+                  : ((isRunning || isFailed)
+                        ? progressPercent.clamp(0.0, 1.0)
+                        : 0.0),
               minHeight: 7,
               backgroundColor: AppColors.surfaceSoft,
               valueColor: AlwaysStoppedAnimation<Color>(
@@ -963,12 +963,16 @@ class _JournalCommandCenterPanelState extends State<JournalCommandCenterPanel> {
             decoration: BoxDecoration(
               color: isRunning
                   ? AppColors.blue50.withAlpha(80)
-                  : AppColors.surfaceSoft,
+                  : (isFailed
+                        ? AppColors.error.withAlpha(12)
+                        : AppColors.surfaceSoft),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: isRunning
                     ? AppColors.primary.withAlpha(60)
-                    : AppColors.border,
+                    : (isFailed
+                          ? AppColors.error.withAlpha(60)
+                          : AppColors.border),
               ),
             ),
             child: Row(
@@ -987,11 +991,17 @@ class _JournalCommandCenterPanelState extends State<JournalCommandCenterPanel> {
                         ? Icons.article_rounded
                         : (isCompleted
                               ? Icons.task_alt_rounded
-                              : Icons.menu_book_rounded),
+                              : (isFailed
+                                    ? Icons.error_outline_rounded
+                                    : Icons.menu_book_rounded)),
                     size: 20,
                     color: isCompleted
                         ? AppColors.green700
-                        : (isRunning ? AppColors.primary : AppColors.textMuted),
+                        : (isRunning
+                              ? AppColors.primary
+                              : (isFailed
+                                    ? AppColors.error
+                                    : AppColors.textMuted)),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -1003,15 +1013,14 @@ class _JournalCommandCenterPanelState extends State<JournalCommandCenterPanel> {
                         children: [
                           Text(
                             isRunning
-                                ? context.l10n.parsingPaperProgress(
-                                    processedArticles < totalArticles
-                                        ? processedArticles + 1
-                                        : totalArticles,
-                                    totalArticles,
-                                  )
+                                ? context.l10n.pipelineProcessingLabel
                                 : (isCompleted
                                       ? 'Đã bóc tách & phân tích hoàn tất'
-                                      : 'Chưa có tác vụ phân tích'),
+                                      : (isFailed
+                                            ? context
+                                                  .l10n
+                                                  .failedAnalysisCardTitle
+                                            : 'Chưa có tác vụ phân tích')),
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
@@ -1048,17 +1057,24 @@ class _JournalCommandCenterPanelState extends State<JournalCommandCenterPanel> {
                       const SizedBox(height: 4),
                       Text(
                         isRunning
-                            ? (_currentArticleTitle != null &&
-                                      _currentArticleTitle!.isNotEmpty
-                                  ? _currentArticleTitle!
-                                  : 'Bài nghiên cứu ${processedArticles < totalArticles ? processedArticles + 1 : totalArticles}: Trích xuất cấu trúc câu IMRAD & CARS Moves...')
-                            : (isCompleted
-                                  ? context.l10n.miningCompleteStatus(
+                            ? context.l10n.pipelineProgressDescription(
+                                processedArticles,
+                                totalArticles,
+                                failedCount,
+                              )
+                            : (isFailed
+                                  ? context.l10n.pipelineFailureDescription(
                                       processedArticles,
+                                      totalArticles,
+                                      failedCount,
                                     )
-                                  : context.l10n.clickMineAbovePrompt(
-                                      _targetArticles,
-                                    )),
+                                  : (isCompleted
+                                        ? context.l10n.miningCompleteStatus(
+                                            processedArticles,
+                                          )
+                                        : context.l10n.clickMineAbovePrompt(
+                                            _targetArticles,
+                                          ))),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -1070,9 +1086,7 @@ class _JournalCommandCenterPanelState extends State<JournalCommandCenterPanel> {
                               ? AppColors.textPrimary
                               : AppColors.textSecondary,
                           fontFamily: 'Manrope',
-                          fontStyle: isRunning && _currentArticleTitle == null
-                              ? FontStyle.italic
-                              : FontStyle.normal,
+                          fontStyle: FontStyle.normal,
                         ),
                       ),
                     ],

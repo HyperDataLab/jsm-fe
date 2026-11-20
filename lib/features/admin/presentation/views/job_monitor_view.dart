@@ -519,16 +519,19 @@ class _JobMonitorViewState extends State<JobMonitorView> {
     final jobId = job['id'].toString();
 
     final metrics = job['metrics'] as Map<String, dynamic>?;
-    final totalArticles = (metrics?['total_articles'] as num?)?.toInt() ?? 0;
+    final totalArticles =
+        (metrics?['target_articles'] as num?)?.toInt() ??
+        (metrics?['total_articles'] as num?)?.toInt() ??
+        0;
     final fetched = (metrics?['fetched'] as num?)?.toInt() ?? 0;
     final parsed = (metrics?['parsed'] as num?)?.toInt() ?? 0;
     final normalized = (metrics?['normalized'] as num?)?.toInt() ?? 0;
     final failed = (metrics?['failed'] as num?)?.toInt() ?? 0;
-    final isDone = status.toUpperCase() == 'COMPLETED';
-
-    final successCount = isDone
-        ? totalArticles
-        : (normalized > 0 ? normalized : (parsed > 0 ? parsed : fetched));
+    final successCount = normalized;
+    final isActive =
+        status.toUpperCase() == 'RUNNING' || status.toUpperCase() == 'PENDING';
+    final targetReached =
+        status.toUpperCase() == 'COMPLETED' && successCount >= totalArticles;
 
     return Container(
       width: double.infinity,
@@ -629,7 +632,9 @@ class _JobMonitorViewState extends State<JobMonitorView> {
                       ],
                     ),
                   ),
-                  if (failed > 0 || status == 'FAILED')
+                  if (!isActive &&
+                      !targetReached &&
+                      (failed > 0 || status.toUpperCase() == 'FAILED'))
                     SizedBox(
                       height: 26,
                       child: ElevatedButton.icon(
@@ -935,6 +940,14 @@ class _JobMonitorViewState extends State<JobMonitorView> {
     Map<String, dynamic>? metrics, {
     String status = '',
   }) {
+    final isActiveJob =
+        status.toUpperCase() == 'RUNNING' || status.toUpperCase() == 'PENDING';
+    final target = (metrics?['target_articles'] as num?)?.toInt() ?? 0;
+    final normalized = (metrics?['normalized'] as num?)?.toInt() ?? 0;
+    final targetAlreadyReached =
+        status.toUpperCase() == 'COMPLETED' &&
+        target > 0 &&
+        normalized >= target;
     showDialog(
       context: context,
       builder: (ctx) {
@@ -1197,7 +1210,9 @@ class _JobMonitorViewState extends State<JobMonitorView> {
                 ),
               ),
               actions: [
-                if (((metrics?['failed'] as num?)?.toInt() ?? 0) > 0)
+                if (!isActiveJob &&
+                    !targetAlreadyReached &&
+                    ((metrics?['failed'] as num?)?.toInt() ?? 0) > 0)
                   ElevatedButton.icon(
                     onPressed: () {
                       Navigator.of(ctx).pop();
