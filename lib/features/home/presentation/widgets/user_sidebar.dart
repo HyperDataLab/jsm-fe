@@ -512,35 +512,34 @@ class UserSidebar extends StatelessWidget {
           ),
         ),
       ),
-      if (isAdmin)
-        PopupMenuItem<String>(
-          value: 'admin',
-          height: 38,
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.admin_panel_settings_outlined,
-                  size: 16,
-                  color: Color(0xFF64748B),
+      PopupMenuItem<String>(
+        value: 'admin',
+        height: 38,
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.admin_panel_settings_outlined,
+                size: 16,
+                color: Color(0xFF64748B),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                AppLocalizations.of(context).adminManagement,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF0F172A),
+                  fontFamily: 'Manrope',
                 ),
-                const SizedBox(width: 10),
-                Text(
-                  AppLocalizations.of(context).adminManagement,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF0F172A),
-                    fontFamily: 'Manrope',
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
+      ),
       const PopupMenuDivider(height: 8),
       PopupMenuItem<String>(
         value: 'logout',
