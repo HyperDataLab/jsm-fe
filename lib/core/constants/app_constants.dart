@@ -1,9 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConstants {
   AppConstants._();
 
   static bool get isProduction {
+    if (kReleaseMode) {
+      return true;
+    }
     if (dotenv.isInitialized) {
       final envVal = dotenv.maybeGet('IS_PRODUCTION');
       if (envVal != null) {

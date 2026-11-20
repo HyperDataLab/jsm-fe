@@ -108,4 +108,29 @@ void main() {
     final ctx = tester.element(find.byType(LoginView));
     expect(ctx.read<AuthCubit>().state, isA<AuthFailure>());
   });
+
+  testWidgets(
+    'in non-production: renders single USER simulator button and no ADMIN button',
+    (tester) async {
+      final repo = _StubRepo();
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pumpAndSettle();
+
+      // Verify simulator section renders only USER button, not ADMIN
+      expect(find.text('Simulate SSO: USER'), findsOneWidget);
+      expect(find.text('Simulate SSO: ADMIN'), findsNothing);
+
+      // Tap mock user button
+      await tester.tap(find.text('Simulate SSO: USER'));
+      await tester.pumpAndSettle();
+
+      final ctx = tester.element(find.byType(LoginView));
+      final state = ctx.read<AuthCubit>().state;
+      expect(state, isA<AuthAuthenticated>());
+      if (state is AuthAuthenticated) {
+        expect(state.user.role, 'USER');
+        expect(state.user.email, 'scholar.user@lab.edu.vn');
+      }
+    },
+  );
 }
