@@ -566,8 +566,8 @@ class AppLocalizations {
       ? 'Đang kết nối phiên OIDC SSO'
       : 'Connected to OIDC SSO session';
   String get ssoProvider => isVietnamese
-      ? 'Nhà cung cấp danh tính phòng lab (HyperDataLab OAuth2 PKCE) • Client ID: hd_jsm'
-      : 'Lab identity provider (HyperDataLab OAuth2 PKCE) • Client ID: hd_jsm';
+      ? 'Nhà cung cấp danh tính phòng lab (HyperDataLab OAuth2 PKCE) • Client ID: hd_CeFMf5SSDY9xiAhP5vxS9Td3'
+      : 'Lab identity provider (HyperDataLab OAuth2 PKCE) • Client ID: hd_CeFMf5SSDY9xiAhP5vxS9Td3';
   String get ssoActive => isVietnamese ? 'HOẠT ĐỘNG' : 'ACTIVE';
   String get privacyTitle => isVietnamese
       ? 'Bảo Mật Bản Thảo & Chính Sách Lưu Trữ'
