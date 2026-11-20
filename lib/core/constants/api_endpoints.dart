@@ -40,7 +40,10 @@ class ApiEndpoints {
 
   static String get ssoClientId =>
       _getEnv('SSO_CLIENT_ID') ??
-      const String.fromEnvironment('SSO_CLIENT_ID', defaultValue: 'hd_jsm');
+      const String.fromEnvironment(
+        'SSO_CLIENT_ID',
+        defaultValue: 'hd_CeFMf5SSDY9xiAhP5vxS9Td3',
+      );
 
   static String get ssoRedirectUri =>
       _getEnv('SSO_REDIRECT_URI') ??
