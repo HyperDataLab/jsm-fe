@@ -687,6 +687,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
             ),
             const SizedBox(width: 10),
             ElevatedButton.icon(
+              autofocus: true,
               onPressed: _startDownload,
               icon: const Icon(Icons.download_rounded, size: 16),
               label: Text(l10n.updateNow),
@@ -714,6 +715,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
             ),
           ] else if (_isDownloaded) ...[
             ElevatedButton.icon(
+              autofocus: true,
               onPressed: _installAndRestart,
               icon: const Icon(Icons.restart_alt_rounded, size: 16),
               label: Text(l10n.restartAndUpdate),
