@@ -5,16 +5,19 @@ class AppConstants {
   AppConstants._();
 
   static bool get isProduction {
-    if (kReleaseMode) {
-      return true;
-    }
     if (dotenv.isInitialized) {
       final envVal = dotenv.maybeGet('IS_PRODUCTION');
       if (envVal != null) {
         return envVal.toLowerCase() == 'true';
       }
     }
-    return const bool.fromEnvironment('IS_PRODUCTION', defaultValue: false);
+    if (const bool.hasEnvironment('IS_PRODUCTION')) {
+      return const bool.fromEnvironment('IS_PRODUCTION');
+    }
+    if (kReleaseMode) {
+      return true;
+    }
+    return false;
   }
 
   static const String appName = 'Journal Publication Trend';

@@ -6,6 +6,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/widgets/app_notification.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/language_switcher.dart';
+import '../../../../core/updater/presentation/widgets/check_update_button.dart';
 import '../../domain/entities/auth_provider.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
@@ -238,6 +239,8 @@ class _LoginViewState extends State<LoginView>
                       ),
                     ),
                     const SizedBox(width: 12),
+                    const CheckUpdateButton(),
+                    const SizedBox(width: 8),
                     const LanguageSwitcher(),
                   ],
                 ),

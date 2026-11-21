@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -114,6 +112,23 @@ class _UpdateDialogState extends State<UpdateDialog> {
   Future<void> _installAndRestart() async {
     final path = _downloadedFilePath;
     if (path == null) return;
+
+    if (kIsWeb) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.l10n.isVietnamese
+                  ? 'Mô phỏng cập nhật thành công! Trên Windows Desktop, ứng dụng sẽ tự động đóng và khởi động lại với bản mới.'
+                  : 'Simulation complete! On Windows Desktop, the application will restart with the new version.',
+            ),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+        Navigator.of(context).pop();
+      }
+      return;
+    }
 
     try {
       await _updateService.executeSilentUpdateAndRestart(path);
@@ -672,7 +687,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
             ),
             const SizedBox(width: 10),
             ElevatedButton.icon(
-              onPressed: (kIsWeb || !Platform.isWindows) ? null : _startDownload,
+              onPressed: _startDownload,
               icon: const Icon(Icons.download_rounded, size: 16),
               label: Text(l10n.updateNow),
               style: ElevatedButton.styleFrom(

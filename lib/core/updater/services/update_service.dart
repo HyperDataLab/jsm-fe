@@ -152,13 +152,31 @@ class UpdateService {
     UpdateInfo update, {
     required void Function(UpdateDownloadProgress progress) onProgress,
   }) async {
-    if (kIsWeb || !Platform.isWindows) {
-      throw UnsupportedError('Tự động tải cập nhật chỉ hỗ trợ trên Windows.');
-    }
-
     final downloadUrl = update.downloadUrl;
     if (downloadUrl == null || downloadUrl.isEmpty) {
       throw StateError('Không tìm thấy liên kết tải file cài đặt.');
+    }
+
+    if (kIsWeb || (isMockEnabled && downloadUrl.contains('example.com'))) {
+      // Simulate download progress smoothly
+      const totalSteps = 25;
+      final total = update.fileSizeBytes ?? 54200000;
+      for (var i = 1; i <= totalSteps; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 60));
+        final received = (total * (i / totalSteps)).toInt();
+        onProgress(
+          UpdateDownloadProgress(
+            receivedBytes: received,
+            totalBytes: total,
+            progress: i / totalSteps,
+          ),
+        );
+      }
+      return 'mock_setup_installer.exe';
+    }
+
+    if (!Platform.isWindows) {
+      throw UnsupportedError('Tự động tải cập nhật chỉ hỗ trợ trên Windows.');
     }
 
     // Ensure temp directory exists
@@ -170,25 +188,6 @@ class UpdateService {
 
     final fileName = update.assetName ?? 'JSM-Setup.exe';
     final targetFile = File('${updateDir.path}\\$fileName');
-
-    if (isMockEnabled && downloadUrl.contains('example.com')) {
-      // Simulate download progress smoothly
-      const totalSteps = 30;
-      final total = update.fileSizeBytes ?? 54200000;
-      for (var i = 1; i <= totalSteps; i++) {
-        await Future<void>.delayed(const Duration(milliseconds: 70));
-        final received = (total * (i / totalSteps)).toInt();
-        onProgress(
-          UpdateDownloadProgress(
-            receivedBytes: received,
-            totalBytes: total,
-            progress: i / totalSteps,
-          ),
-        );
-      }
-      await targetFile.writeAsString('mock setup installer');
-      return targetFile.path;
-    }
 
     final request = http.Request('GET', Uri.parse(downloadUrl));
     final response = await _client.send(request);
