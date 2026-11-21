@@ -5,19 +5,25 @@ class AppConstants {
   AppConstants._();
 
   static bool get isProduction {
-    if (kReleaseMode) {
-      return true;
-    }
     if (dotenv.isInitialized) {
       final envVal = dotenv.maybeGet('IS_PRODUCTION');
       if (envVal != null) {
         return envVal.toLowerCase() == 'true';
       }
     }
-    return const bool.fromEnvironment('IS_PRODUCTION', defaultValue: false);
+    if (const bool.hasEnvironment('IS_PRODUCTION')) {
+      return const bool.fromEnvironment('IS_PRODUCTION');
+    }
+    if (kReleaseMode) {
+      return true;
+    }
+    return false;
   }
 
   static const String appName = 'Journal Publication Trend';
+  static const String appVersion = '1.0.8';
+  static const String appBuildNumber = '9';
+  static const String defaultGithubRepo = 'ResearchPulse/jsm-fe';
   static const int connectTimeoutSeconds = 30;
   static const int receiveTimeoutSeconds = 30;
 

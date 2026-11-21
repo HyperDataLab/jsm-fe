@@ -6,6 +6,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/widgets/app_notification.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/language_switcher.dart';
+import '../../../../core/updater/presentation/widgets/check_update_button.dart';
 import '../../domain/entities/auth_provider.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
@@ -206,38 +207,42 @@ class _LoginViewState extends State<LoginView>
                       ),
                     ),
                     const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.hub_rounded,
-                            size: 13,
-                            color: AppColors.primary,
-                          ),
-                          SizedBox(width: 5),
-                          Text(
-                            'journal system miner',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
-                              fontFamily: 'Manrope',
+                    if (MediaQuery.of(context).size.width >= 900) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.hub_rounded,
+                              size: 13,
+                              color: AppColors.primary,
                             ),
-                          ),
-                        ],
+                            SizedBox(width: 5),
+                            Text(
+                              'journal system miner',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary,
+                                fontFamily: 'Manrope',
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
+                      const SizedBox(width: 12),
+                    ],
+                    const CheckUpdateButton(),
+                    const SizedBox(width: 8),
                     const LanguageSwitcher(),
                   ],
                 ),

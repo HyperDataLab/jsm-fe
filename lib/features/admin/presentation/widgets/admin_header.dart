@@ -5,6 +5,7 @@ import '../../../../core/widgets/search_input_box.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/language_switcher.dart';
+import '../../../../core/updater/presentation/widgets/check_update_button.dart';
 
 class AdminHeader extends StatelessWidget {
   final int selectedIndex;
@@ -99,6 +100,8 @@ class AdminHeader extends StatelessWidget {
             onChanged: onSearchChanged,
           ),
           const SizedBox(width: 14),
+          const CheckUpdateButton(),
+          const SizedBox(width: 8),
 
           // Language Switcher on navbar right
           const LanguageSwitcher(),

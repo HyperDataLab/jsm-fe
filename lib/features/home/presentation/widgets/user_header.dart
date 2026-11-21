@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../core/widgets/language_switcher.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/updater/presentation/widgets/check_update_button.dart';
 
 class UserHeader extends StatelessWidget {
   final int selectedIndex;
@@ -38,15 +39,17 @@ class UserHeader extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            _getBreadcrumb(context),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.textSubtle,
-              fontWeight: FontWeight.w500,
-              fontFamily: 'Manrope',
+          Flexible(
+            child: Text(
+              _getBreadcrumb(context),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSubtle,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Manrope',
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -67,6 +70,8 @@ class UserHeader extends StatelessWidget {
             ),
           ),
           const Spacer(),
+          const CheckUpdateButton(),
+          const SizedBox(width: 8),
           const LanguageSwitcher(),
         ],
       ),
