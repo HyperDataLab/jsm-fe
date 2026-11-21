@@ -16,7 +16,6 @@ import 'sso_session_store_io.dart';
 typedef BrowserLauncher = Future<bool> Function(String url);
 
 /// Exit future for the dedicated Windows Edge window, when available.
-Future<void>? _defaultBrowserExit;
 Process? _defaultSsoBrowserProcess;
 
 void _closeDefaultSsoBrowser() {
@@ -32,7 +31,6 @@ void _closeDefaultSsoBrowser() {
 /// Launches the browser on Desktop platforms using pure dart:io (no native plugin needed).
 /// On Windows, it attempts to launch Edge in app mode for a clean embedded-window appearance.
 Future<bool> defaultDesktopBrowserLauncher(String url) async {
-  _defaultBrowserExit = null;
   _defaultSsoBrowserProcess = null;
   if (Platform.isWindows) {
     // 1. Try launching Microsoft Edge in app mode (frameless window)
@@ -44,8 +42,7 @@ Future<bool> defaultDesktopBrowserLauncher(String url) async {
     for (final edgePath in edgePaths) {
       try {
         if (edgePath == 'msedge.exe' || File(edgePath).existsSync()) {
-          // An isolated profile keeps this Edge process tied to the SSO
-          // window. Its exit tells the app when the user closes that window.
+          // An isolated profile keeps this Edge process tied to the SSO window.
           final profile = await Directory.systemTemp.createTemp('jsm_sso_');
           final process = await Process.start(edgePath, [
             '--user-data-dir=${profile.path}',
@@ -56,17 +53,11 @@ Future<bool> defaultDesktopBrowserLauncher(String url) async {
             '--window-size=520,720',
           ]);
           _defaultSsoBrowserProcess = process;
-          final processExit = process.exitCode.then((_) async {
+          process.exitCode.then((_) async {
             try {
               await profile.delete(recursive: true);
             } catch (_) {}
           });
-          // Edge can keep a background process alive after its app window is
-          // closed. Watch the top-level window as well as the process handle.
-          _defaultBrowserExit = Future.any<void>([
-            processExit,
-            _watchWindowsBrowserWindow(process),
-          ]);
           return true;
         }
       } catch (_) {}
@@ -107,43 +98,11 @@ Future<bool> defaultDesktopBrowserLauncher(String url) async {
   return false;
 }
 
-Future<void> _watchWindowsBrowserWindow(Process process) async {
-  var hasSeenWindow = false;
-  var consecutiveMissingChecks = 0;
-  while (true) {
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-    try {
-      final script =
-          '\$p = Get-Process -Id ${process.pid} -ErrorAction SilentlyContinue; '
-          'if (\$null -eq \$p) { Write-Output CLOSED } '
-          'elseif (\$p.MainWindowHandle -ne 0) { Write-Output OPEN } '
-          'else { Write-Output WAIT }';
-      final result = await Process.run('powershell.exe', [
-        '-NoProfile',
-        '-NonInteractive',
-        '-Command',
-        script,
-      ]);
-      final status = (result.stdout as String).trim();
-      if (status == 'CLOSED') return;
-      if (status == 'OPEN') {
-        hasSeenWindow = true;
-        consecutiveMissingChecks = 0;
-      } else if (hasSeenWindow && ++consecutiveMissingChecks >= 3) {
-        return;
-      }
-    } catch (_) {
-      // The process exit future remains as a fallback if window polling fails.
-      return;
-    }
-  }
-}
-
 /// Desktop implementation of the Central SSO flow:
 /// 1. builds the same PKCE/S256 authorize URL as the web launcher,
 /// 2. opens the user's browser in standalone app mode,
-/// 3. runs a one-shot loopback HTTP server on localhost:5173 that receives
-///    the SSO redirect at /auth/callback (the configured SSO_REDIRECT_URI),
+/// 3. runs a loopback HTTP server on localhost:5173 (dual-stack IPv4/IPv6)
+///    that receives the SSO redirect at /auth/callback (SSO_REDIRECT_URI),
 /// 4. completes the token exchange + userinfo with the shared launcher code.
 class DesktopSsoLauncher extends SsoAuthLauncher {
   final int listenPort;
@@ -164,15 +123,12 @@ class DesktopSsoLauncher extends SsoAuthLauncher {
     return 5173;
   }
 
-  HttpServer? _server;
+  final List<HttpServer> _servers = [];
   Completer<Uri> _callback = Completer<Uri>();
-  Future<void>? _browserClosed;
 
   @override
   Future<void> start(AuthProvider provider) async {
     _callback = Completer<Uri>();
-    _browserClosed = null;
-    _defaultBrowserExit = null;
     _defaultSsoBrowserProcess = null;
     await _startLoopbackServer();
     final redirectUri = 'http://localhost:$listenPort/auth/callback';
@@ -182,6 +138,7 @@ class DesktopSsoLauncher extends SsoAuthLauncher {
       jsonEncode({
         'state': pending.state,
         'code_verifier': pending.codeVerifier,
+        'redirect_uri': redirectUri,
       }),
     );
     final url = urlBuilder.build(
@@ -193,10 +150,8 @@ class DesktopSsoLauncher extends SsoAuthLauncher {
       ),
     );
     final ok = await browserLauncher(url);
-    _browserClosed = _defaultBrowserExit;
     if (!ok) {
-      await _server?.close(force: true);
-      _server = null;
+      await _closeServers(force: true);
       throw const AuthLauncherException('Could not launch the login window.');
     }
   }
@@ -204,58 +159,71 @@ class DesktopSsoLauncher extends SsoAuthLauncher {
   /// Waits for the browser redirect, then completes the SSO exchange.
   Future<AuthResult> awaitCallbackAndComplete() async {
     try {
-      final closed = _browserClosed;
-      final uri =
-          await (closed == null
-                  ? _callback.future
-                  : Future.any([
-                      _callback.future,
-                      closed.then<Uri>(
-                        (_) => throw const AuthLauncherException(
-                          'Login was cancelled.',
-                        ),
-                      ),
-                    ]))
-              .timeout(
-                const Duration(minutes: 5),
-                onTimeout: () => throw const AuthLauncherException(
-                  'Login timed out. Please try again.',
-                ),
-              );
+      final uri = await _callback.future.timeout(
+        const Duration(minutes: 5),
+        onTimeout: () => throw const AuthLauncherException(
+          'Login timed out. Please try again.',
+        ),
+      );
       return await completeFromLoopbackCallback(uri);
     } catch (_) {
-      await _server?.close(force: true);
-      _server = null;
+      await _closeServers(force: true);
       store.remove(SsoSessionKeys.pendingRequest);
       rethrow;
     }
   }
 
   Future<void> _startLoopbackServer() async {
-    if (_server != null) return;
+    if (_servers.isNotEmpty) return;
     try {
-      _server = await HttpServer.bind(InternetAddress.loopbackIPv4, listenPort);
+      final v4 = await HttpServer.bind(
+        InternetAddress.loopbackIPv4,
+        listenPort,
+        shared: true,
+      );
+      _servers.add(v4);
     } on SocketException {
-      // Port busy: a previous server may still be running; reuse it.
-      if (_server != null) return;
+      if (_servers.isNotEmpty) return;
       throw AuthLauncherException(
         'Port $listenPort is already in use. Close other apps and retry.',
       );
     }
-    _server!.listen((request) async {
-      final uri = Uri.parse('http://localhost:$listenPort${request.uri}');
-      final isCallback = uri.path == AppConstants.ssoCallbackPath;
-      final responded = _respondBrowserPage(request, isCallback);
-      if (isCallback && !_callback.isCompleted) _callback.complete(uri);
-      await responded;
-    });
+
+    try {
+      final v6 = await HttpServer.bind(
+        InternetAddress.loopbackIPv6,
+        listenPort,
+        shared: true,
+      );
+      _servers.add(v6);
+    } catch (_) {
+      // IPv6 loopback may not be configured on some network interfaces; ignore.
+    }
+
+    for (final server in _servers) {
+      server.listen((request) async {
+        final uri = Uri.parse('http://localhost:$listenPort${request.uri}');
+        final isCallback = uri.path == AppConstants.ssoCallbackPath;
+        final responded = _respondBrowserPage(request, isCallback);
+        if (isCallback && !_callback.isCompleted) _callback.complete(uri);
+        await responded;
+      });
+    }
+  }
+
+  Future<void> _closeServers({bool force = false}) async {
+    for (final s in _servers) {
+      try {
+        await s.close(force: force);
+      } catch (_) {}
+    }
+    _servers.clear();
   }
 
   /// Same completion logic as the web flow, but against an arbitrary loopback
   /// URI instead of the browser's current page.
   Future<AuthResult> completeFromLoopbackCallback(Uri uri) async {
-    await _server?.close();
-    _server = null;
+    await _closeServers();
     // Reuse the parent class validation/exchange by temporarily pointing the
     // browser seam at the loopback callback URI.
     BrowserSso.currentUri = () => uri;
@@ -274,7 +242,7 @@ class DesktopSsoLauncher extends SsoAuthLauncher {
 
   /// Raw socket requests bypass TestWidgetsFlutterBinding's HTTP mock, so
   /// tests must opt out of the binding before using the loopback server.
-  bool get loopbackServerRunning => _server != null;
+  bool get loopbackServerRunning => _servers.isNotEmpty;
 
   Future<void> _respondBrowserPage(HttpRequest request, bool success) async {
     request.response.headers.contentType = ContentType.html;
@@ -298,8 +266,8 @@ class DesktopSsoLauncher extends SsoAuthLauncher {
     if (!_callback.isCompleted) {
       _callback.completeError(const AuthLauncherException('Login cancelled.'));
     }
-    _server?.close(force: true);
-    _server = null;
+    _closeServers(force: true);
+    _closeDefaultSsoBrowser();
     super.clearSession();
   }
 }

@@ -22,7 +22,7 @@ void main() {
       browserLauncher: (_) async => true,
       apiClient: OidcApiClient(
         client: MockClient((request) async {
-          if (request.url.path.endsWith('/oidc/token')) {
+          if (request.url.path.endsWith('/token')) {
             return http.Response(
               jsonEncode({
                 'access_token': 'at',

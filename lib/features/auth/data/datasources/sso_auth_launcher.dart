@@ -175,4 +175,6 @@ AuthUser _toAuthUser(SsoUserInfo info) => AuthUser(
   name: info.name,
   picture: info.picture,
   role: info.role,
+  studentId: info.studentId,
+  major: info.major,
 );

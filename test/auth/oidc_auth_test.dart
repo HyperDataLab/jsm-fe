@@ -65,12 +65,12 @@ void main() {
       expect(uri.scheme, 'http');
       expect(uri.host, 'localhost');
       expect(uri.port, 3001);
-      expect(uri.path, '/api/v1/oidc/authorize');
+      expect(uri.path, '/oauth/authorize');
       final q = uri.queryParameters;
       expect(q['client_id'], 'researchpulse-ecosystem');
       expect(q['redirect_uri'], 'http://localhost:3003/auth/callback');
       expect(q['response_type'], 'code');
-      expect(q['scope'], 'openid profile email');
+      expect(q['scope'], 'email profile hyperdatalab_profile');
       expect(q['state'], state);
       expect(q['code_challenge'], challenge);
       expect(q['code_challenge_method'], 'S256');

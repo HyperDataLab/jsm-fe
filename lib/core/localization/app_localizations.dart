@@ -566,8 +566,8 @@ class AppLocalizations {
       ? 'Đang kết nối phiên OIDC SSO'
       : 'Connected to OIDC SSO session';
   String get ssoProvider => isVietnamese
-      ? 'Nhà cung cấp danh tính phòng lab (Keycloak OIDC) • Client ID: researchpulse-ecosystem'
-      : 'Lab identity provider (Keycloak OIDC) • Client ID: researchpulse-ecosystem';
+      ? 'Nhà cung cấp danh tính phòng lab (HyperDataLab OAuth2 PKCE) • Client ID: hd_CeFMf5SSDY9xiAhP5vxS9Td3'
+      : 'Lab identity provider (HyperDataLab OAuth2 PKCE) • Client ID: hd_CeFMf5SSDY9xiAhP5vxS9Td3';
   String get ssoActive => isVietnamese ? 'HOẠT ĐỘNG' : 'ACTIVE';
   String get privacyTitle => isVietnamese
       ? 'Bảo Mật Bản Thảo & Chính Sách Lưu Trữ'
@@ -1149,6 +1149,25 @@ class AppLocalizations {
   String parsingPaperProgress(int current, int total) => isVietnamese
       ? 'Đang bóc tách bài $current / $total'
       : 'Parsing article $current / $total';
+  String get pipelineProcessingLabel =>
+      isVietnamese ? 'Đang xử lý bài ứng viên' : 'Processing candidate papers';
+  String get failedAnalysisCardTitle =>
+      isVietnamese ? 'Chưa đạt mục tiêu bài hợp lệ' : 'Target not reached';
+  String pipelineProgressDescription(int normalized, int target, int failed) {
+    if (isVietnamese) {
+      return failed > 0
+          ? 'Đã chuẩn hóa $normalized/$target bài hợp lệ; đang tìm bài thay thế cho các bài lỗi.'
+          : 'Đang tải và phân tích bài để đạt mục tiêu $target bài hợp lệ.';
+    }
+    return failed > 0
+        ? '$normalized/$target valid papers normalized; finding replacements for failed papers.'
+        : 'Downloading and analyzing papers toward the $target-paper target.';
+  }
+
+  String pipelineFailureDescription(int normalized, int target, int failed) =>
+      isVietnamese
+      ? 'Đã chuẩn hóa $normalized/$target bài hợp lệ; $failed bài lỗi. Có thể thử lại để tiếp tục tìm bài thay thế.'
+      : '$normalized/$target valid papers normalized; $failed failed. Retry to continue finding replacements.';
   String miningCompleteStatus(int count) => isVietnamese
       ? 'Dữ liệu toàn văn đã chuẩn hóa ($count bài) và sẵn sàng khảo sát đối chuẩn học thuật.'
       : 'Full-text data normalized ($count papers) and ready for academic benchmarking.';
