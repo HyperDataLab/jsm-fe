@@ -12,7 +12,7 @@ import 'package:jsm_fe/features/auth/domain/entities/auth_provider.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = null;
-  const port = 5173;
+  const port = 5998;
 
   test('E2E Desktop SSO: dual-stack IPv4 & IPv6 loopback callbacks and token exchange', () async {
     String? launchedUrl;
@@ -30,7 +30,7 @@ void main() {
                 'access_token': 'at-e2e-token',
                 'token_type': 'Bearer',
                 'expires_in': 3600,
-                'id_token': 'mock.id.token'
+                'id_token': 'mock.id.token',
               }),
               200,
             );
@@ -41,7 +41,7 @@ void main() {
                 'sub': 'sub-e2e-user',
                 'email': 'scholar@lab.edu.vn',
                 'name': 'Scholar Test User',
-                'role': 'USER'
+                'role': 'USER',
               }),
               200,
             );
@@ -55,19 +55,24 @@ void main() {
     await launcher.start(AuthProvider.web);
     expect(launcher.loopbackServerRunning, isTrue);
     expect(launchedUrl, contains('client_id=hd_CeFMf5SSDY9xiAhP5vxS9Td3'));
-    expect(launchedUrl, contains('redirect_uri=http%3A%2F%2Flocalhost%3A5173%2Fauth%2Fcallback'));
+    expect(
+      launchedUrl,
+      contains('redirect_uri=http%3A%2F%2Flocalhost%3A$port%2Fauth%2Fcallback'),
+    );
 
     // 2. Read pending state
     final pendingRaw = launcher.store.read(SsoSessionKeys.pendingRequest);
     expect(pendingRaw, isNotNull);
     final pending = jsonDecode(pendingRaw!) as Map<String, dynamic>;
     final state = pending['state'] as String;
-    expect(pending['redirect_uri'], 'http://localhost:5173/auth/callback');
+    expect(pending['redirect_uri'], 'http://localhost:$port/auth/callback');
 
     // 3. Test IPv4 callback (127.0.0.1)
     final client = HttpClient();
     final reqV4 = await client.getUrl(
-      Uri.parse('http://127.0.0.1:$port/auth/callback?code=mock_auth_code&state=$state'),
+      Uri.parse(
+        'http://127.0.0.1:$port/auth/callback?code=mock_auth_code&state=$state',
+      ),
     );
     final respV4 = await reqV4.close();
     final bodyV4 = await respV4.transform(utf8.decoder).join();
@@ -96,7 +101,7 @@ void main() {
                 'access_token': 'at-v6-token',
                 'token_type': 'Bearer',
                 'expires_in': 3600,
-                'id_token': 'mock.id.token'
+                'id_token': 'mock.id.token',
               }),
               200,
             );
@@ -107,7 +112,7 @@ void main() {
                 'sub': 'sub-v6-user',
                 'email': 'scholar_v6@lab.edu.vn',
                 'name': 'Scholar V6 User',
-                'role': 'USER'
+                'role': 'USER',
               }),
               200,
             );
@@ -118,13 +123,17 @@ void main() {
     );
 
     await launcherV6.start(AuthProvider.web);
-    final pendingV6 = jsonDecode(launcherV6.store.read(SsoSessionKeys.pendingRequest)!) as Map<String, dynamic>;
+    final pendingV6 = jsonDecode(
+      launcherV6.store.read(SsoSessionKeys.pendingRequest)!,
+    ) as Map<String, dynamic>;
     final stateV6 = pendingV6['state'] as String;
 
     final client = HttpClient();
     try {
       final reqV6 = await client.getUrl(
-        Uri.parse('http://[::1]:$port/auth/callback?code=mock_code_v6&state=$stateV6'),
+        Uri.parse(
+          'http://[::1]:$port/auth/callback?code=mock_code_v6&state=$stateV6',
+        ),
       );
       final respV6 = await reqV6.close();
       final bodyV6 = await respV6.transform(utf8.decoder).join();
