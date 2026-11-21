@@ -68,6 +68,45 @@ class AppLocalizations {
   String get languageSwitcherTooltip =>
       isVietnamese ? 'Đổi ngôn ngữ' : 'Change language';
 
+  // Check Update
+  String get checkUpdate =>
+      isVietnamese ? 'Kiểm tra cập nhật' : 'Check for updates';
+  String get checkingForUpdates =>
+      isVietnamese ? 'Đang kiểm tra bản cập nhật mới...' : 'Checking for new updates...';
+  String get updateAvailable =>
+      isVietnamese ? 'Đã có bản cập nhật mới!' : 'New update available!';
+  String get upToDateTitle =>
+      isVietnamese ? 'Bạn đang dùng phiên bản mới nhất' : 'You are using the latest version';
+  String get upToDateDesc => isVietnamese
+      ? 'Hệ thống HyperDataLab JSM của bạn đã ở phiên bản mới nhất.'
+      : 'Your HyperDataLab JSM installation is completely up to date.';
+  String get currentVersionLabel =>
+      isVietnamese ? 'Phiên bản hiện tại' : 'Current version';
+  String get latestVersionLabel =>
+      isVietnamese ? 'Phiên bản mới nhất' : 'Latest version';
+  String get releaseNotesLabel =>
+      isVietnamese ? 'Nội dung cập nhật (Release Notes)' : 'Release Notes';
+  String get updateNow =>
+      isVietnamese ? 'Cập nhật ngay' : 'Update Now';
+  String get downloadingUpdate =>
+      isVietnamese ? 'Đang tải bản cập nhật...' : 'Downloading update...';
+  String get downloadComplete =>
+      isVietnamese ? 'Tải về hoàn tất' : 'Download Complete';
+  String get restartAndUpdate =>
+      isVietnamese ? 'Khởi động lại & Cập nhật' : 'Restart & Update';
+  String get restartAndUpdateDesc => isVietnamese
+      ? 'Ứng dụng sẽ tự động đóng và khởi động lại với phiên bản mới sau khi cập nhật.'
+      : 'The application will close and restart with the latest version after updating.';
+  String get updateFailed =>
+      isVietnamese ? 'Lỗi kiểm tra cập nhật' : 'Update check failed';
+  String get noUpdateFound => isVietnamese
+      ? 'Chưa tìm thấy bản phát hành mới nào trên máy chủ.'
+      : 'No new release found on the server.';
+  String get updateTooltip =>
+      isVietnamese ? 'Kiểm tra phiên bản mới' : 'Check for new updates';
+  String get later =>
+      isVietnamese ? 'Để sau' : 'Later';
+
   // Topbar / Navbar & Action Buttons
   String get signOut => isVietnamese ? 'Đăng xuất' : 'Sign out';
   String get adminDashboard =>
