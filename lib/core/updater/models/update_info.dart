@@ -61,8 +61,9 @@ class SemverComparator {
     final parts1 = _normalize(v1);
     final parts2 = _normalize(v2);
 
-    final maxLength =
-        parts1.length > parts2.length ? parts1.length : parts2.length;
+    final maxLength = parts1.length > parts2.length
+        ? parts1.length
+        : parts2.length;
     for (var i = 0; i < maxLength; i++) {
       final p1 = i < parts1.length ? parts1[i] : 0;
       final p2 = i < parts2.length ? parts2[i] : 0;

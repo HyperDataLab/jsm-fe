@@ -9,12 +9,15 @@ import 'update_dialog.dart';
 /// Matches the styling of LanguageSwitcher on navigation headers.
 class CheckUpdateButton extends StatelessWidget {
   final bool isLight;
+  final bool? compact;
 
-  const CheckUpdateButton({super.key, this.isLight = false});
+  const CheckUpdateButton({super.key, this.isLight = false, this.compact});
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final screenWidth = MediaQuery.maybeOf(context)?.size.width ?? 1200;
+    final showLabel = compact == null ? (screenWidth >= 900) : !compact!;
 
     return Tooltip(
       message: l10n.updateTooltip,
@@ -52,20 +55,25 @@ class CheckUpdateButton extends StatelessWidget {
                   size: 16,
                   color: AppColors.primary,
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  l10n.checkUpdate,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    fontFamily: 'Manrope',
-                    letterSpacing: -0.1,
+                if (showLabel) ...[
+                  const SizedBox(width: 6),
+                  Text(
+                    l10n.checkUpdate,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      fontFamily: 'Manrope',
+                      letterSpacing: -0.1,
+                    ),
                   ),
-                ),
+                ],
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(4),

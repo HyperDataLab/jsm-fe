@@ -10,11 +10,7 @@ class UpdateDialog extends StatefulWidget {
   final UpdateService? updateService;
   final bool autoCheck;
 
-  const UpdateDialog({
-    super.key,
-    this.updateService,
-    this.autoCheck = true,
-  });
+  const UpdateDialog({super.key, this.updateService, this.autoCheck = true});
 
   static Future<void> show(BuildContext context) {
     return showDialog<void>(
@@ -64,7 +60,10 @@ class _UpdateDialogState extends State<UpdateDialog> {
       if (!mounted) return;
       setState(() {
         _isChecking = false;
-        _errorMessage = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
+        _errorMessage = e.toString().replaceFirst(
+          RegExp(r'^Exception:\s*'),
+          '',
+        );
       });
     }
   }
@@ -104,7 +103,10 @@ class _UpdateDialogState extends State<UpdateDialog> {
       if (!mounted) return;
       setState(() {
         _isDownloading = false;
-        _errorMessage = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
+        _errorMessage = e.toString().replaceFirst(
+          RegExp(r'^Exception:\s*'),
+          '',
+        );
       });
     }
   }
@@ -511,7 +513,9 @@ class _UpdateDialogState extends State<UpdateDialog> {
               value: _downloadProgress?.progress ?? 0.0,
               minHeight: 8,
               backgroundColor: AppColors.slate100,
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AppColors.primary,
+              ),
             ),
           ),
           const SizedBox(height: 6),
@@ -695,7 +699,10 @@ class _UpdateDialogState extends State<UpdateDialog> {
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -723,7 +730,10 @@ class _UpdateDialogState extends State<UpdateDialog> {
                 backgroundColor: AppColors.green700,
                 foregroundColor: Colors.white,
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),

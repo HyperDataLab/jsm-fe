@@ -31,7 +31,10 @@ class UpdateService {
 
   /// Checks whether mock updates are enabled for local testing.
   bool get isMockEnabled {
-    const fromEnv = bool.fromEnvironment('MOCK_UPDATE_ENABLED', defaultValue: false);
+    const fromEnv = bool.fromEnvironment(
+      'MOCK_UPDATE_ENABLED',
+      defaultValue: false,
+    );
     if (fromEnv) return true;
 
     if (dotenv.isInitialized) {
@@ -68,13 +71,15 @@ class UpdateService {
     final uri = Uri.parse('https://api.github.com/repos/$repo/releases/latest');
 
     try {
-      final response = await _client.get(
-        uri,
-        headers: {
-          'Accept': 'application/vnd.github.v3+json',
-          'User-Agent': 'HyperDataLab-JSM-Updater',
-        },
-      ).timeout(const Duration(seconds: 15));
+      final response = await _client
+          .get(
+            uri,
+            headers: {
+              'Accept': 'application/vnd.github.v3+json',
+              'User-Agent': 'HyperDataLab-JSM-Updater',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 404) {
         // No releases have been published yet in the repository
@@ -82,8 +87,7 @@ class UpdateService {
           currentVersion: current,
           latestVersion: current,
           hasUpdate: false,
-          releaseNotes:
-              'Chưa có bản phát hành mới nào trên kho lưu trữ $repo.',
+          releaseNotes: 'Chưa có bản phát hành mới nào trên kho lưu trữ $repo.',
         );
       }
 
@@ -98,8 +102,9 @@ class UpdateService {
       final releaseName = (data['name'] as String?) ?? rawTag;
       final releaseNotes = (data['body'] as String?) ?? '';
       final publishedAtStr = data['published_at'] as String?;
-      final publishedAt =
-          publishedAtStr != null ? DateTime.tryParse(publishedAtStr) : null;
+      final publishedAt = publishedAtStr != null
+          ? DateTime.tryParse(publishedAtStr)
+          : null;
 
       // Extract installer asset (prefer *.exe with "setup" in name, or any *.exe)
       final assets = (data['assets'] as List<dynamic>?) ?? [];
@@ -122,14 +127,16 @@ class UpdateService {
 
       final cleanLatestVersion =
           rawTag.startsWith('v') || rawTag.startsWith('V')
-              ? rawTag.substring(1)
-              : rawTag;
+          ? rawTag.substring(1)
+          : rawTag;
 
       final hasUpdate = SemverComparator.isNewer(cleanLatestVersion, current);
 
       return UpdateInfo(
         currentVersion: current,
-        latestVersion: cleanLatestVersion.isNotEmpty ? cleanLatestVersion : current,
+        latestVersion: cleanLatestVersion.isNotEmpty
+            ? cleanLatestVersion
+            : current,
         hasUpdate: hasUpdate,
         releaseName: releaseName,
         releaseNotes: releaseNotes,
@@ -193,7 +200,9 @@ class UpdateService {
     final response = await _client.send(request);
 
     if (response.statusCode >= 400) {
-      throw HttpException('Tải bản cập nhật thất bại (HTTP ${response.statusCode}).');
+      throw HttpException(
+        'Tải bản cập nhật thất bại (HTTP ${response.statusCode}).',
+      );
     }
 
     final totalBytes = response.contentLength ?? (update.fileSizeBytes ?? 0);
@@ -204,8 +213,9 @@ class UpdateService {
       await for (final chunk in response.stream) {
         sink.add(chunk);
         receivedBytes += chunk.length;
-        final progress =
-            totalBytes > 0 ? (receivedBytes / totalBytes).clamp(0.0, 1.0) : 0.0;
+        final progress = totalBytes > 0
+            ? (receivedBytes / totalBytes).clamp(0.0, 1.0)
+            : 0.0;
         onProgress(
           UpdateDownloadProgress(
             receivedBytes: receivedBytes,
@@ -240,8 +250,8 @@ class UpdateService {
 
     final appExePath =
         (defaultInstalledExe != null && await defaultInstalledExe.exists())
-            ? defaultInstalledExe.path
-            : Platform.resolvedExecutable;
+        ? defaultInstalledExe.path
+        : Platform.resolvedExecutable;
 
     final tempBase = Platform.environment['TEMP'] ?? Directory.systemTemp.path;
     final batFile = File('$tempBase\\HyperDataLab_JSM_Update\\run_update.bat');
@@ -249,7 +259,8 @@ class UpdateService {
     // Create the batch script that waits for Flutter to terminate,
     // terminates any remaining backend sidecar, executes the silent installer,
     // and restarts the newly installed application.
-    final batContent = '''
+    final batContent =
+        '''
 @echo off
 chcp 65001 >nul
 echo [HyperDataLab JSM] Preparing to update...
@@ -273,11 +284,10 @@ exit
     await batFile.writeAsString(batContent, encoding: utf8);
 
     // Launch batch runner detached
-    await Process.start(
-      'cmd.exe',
-      ['/c', batFile.path],
-      mode: ProcessStartMode.detached,
-    );
+    await Process.start('cmd.exe', [
+      '/c',
+      batFile.path,
+    ], mode: ProcessStartMode.detached);
 
     // Clean exit of current process
     exit(0);
